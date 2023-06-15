@@ -9,8 +9,10 @@ const packageRoute = require("./routes/packageRoute");
 const userRoute = require("./routes/userRoute");
 const adminRoute = require("./routes/adminRoute");
 const transactionRoute = require("./routes/transactionRoutes");
+const dataRoute = require("./routes/dataRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 // const insertPackages = require("./middleWare/insertPackages")
+const DataPlan = require('./models/dataPlansModel');
 
 
 const app = express();
@@ -35,6 +37,7 @@ app.use("/api/packages", packageRoute)
 app.use("/api/users", userRoute);
 app.use("/api/admin", adminRoute)
 app.use("/api/transaction", transactionRoute);
+app.use("/api/data", dataRoute);
 
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
@@ -49,3 +52,8 @@ mongoose.connect(process.env.MONGO_URI)
 .then(() => {
     app.listen(PORT, () => console.log(`Server running on Port ${PORT}`))
 }).catch((err => console.log(err)));
+
+
+
+
+

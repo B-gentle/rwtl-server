@@ -14,7 +14,7 @@ const currentMinutes = currentDate.getMinutes();
 const getTransactions = async (req, res) => {
     try {
       const userId = req.user.id; 
-      const transactions = await Transaction.find({ user: userId });
+      const transactions = await Transaction.find({ user: userId, recipient: userId });
   
       if (transactions) {
         res.status(200).json({ data: transactions });
@@ -58,7 +58,7 @@ const sendMoney = asyncHandler(async (req, res) => {
             transactionId,
             transactionType: 'transfer',
             user: req.user._id,
-            recipient: receiver.fullname,
+            recipient: receiver.username,
             amount,
             status: 'successful',
         })

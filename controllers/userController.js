@@ -17,7 +17,7 @@ const generateReferralCode = (id, username) => {
 
 // function to generate referral link
 const generateReferralLink = (referralCode) => {
-    return `https://myrechargewise.com/signup?referralLink=${referralCode}`;
+    return `https://myrechargewise.com/signup?referralCode=${referralCode}`;
 };
 
 
@@ -85,6 +85,27 @@ const calculateUplineBonuses = (paidAmount) => {
     return bonuses;
 }
 
+const checks = asyncHandler(async(req, res) => {
+    const { username, email,} = req.body
+
+    const usernameExist = await User.findOne({
+        username
+    })
+
+    const emailExist = await User.findOne({
+        email
+    })
+    if (usernameExist) {
+        res.status(404)
+        throw new Error("username already exist")
+    }
+    if (emailExist) {
+        res.status(404)
+        throw new Error("email already exist")
+    }
+    res.status(200).json({message:''})
+})
+
 const registerUser = asyncHandler(async (req, res) => {
     const {
         fullname,
@@ -108,7 +129,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     //check if user exist
     const userExist = await User.findOne({
-        email
+        username
     })
     if (userExist) {
         res.status(404)
@@ -199,17 +220,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
     const {
-        email,
+        username,
         password
     } = req.body
-    if (!email || !password) {
+    if (!username || !password) {
         res.status(404)
         throw new Error("Enter email and password")
     }
 
     //check if user exist
     const user = await User.findOne({
-        email
+        username
     })
     if (!user) {
         res.status(400);
@@ -447,4 +468,5 @@ module.exports = {
     changePassword,
     forgotPassword,
     resetPassword,
+    checks
 }
