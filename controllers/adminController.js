@@ -224,6 +224,30 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
     // user.passkey = undefined;
     const registered = await user.save();
     if (registered) {
+         // Reset Email
+         const url = 'https://myrechargewise.com/login'
+         const message = `
+         <h2>Hello ${user.fullname}</h2>
+         <p>Your Registration on myrechargewise was successful for the ${user.selectedPackage.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
+         <a href=${url} clicktracking=off>Click here to login</a>
+         <small>Best Regards</small>
+         <span>RechargeWise Technologies</span>`;
+         
+             const subject = "Registration Successful"
+             const send_to = user.email;
+             const sent_from = process.env.EMAIL_USER;
+             const reply_to = "noreply@RWTL.com";
+         
+             try {
+                 await sendEmail(subject, message, send_to, sent_from, reply_to)
+                 res.status(200).json({
+                     success: true,
+                     message: "Reset email sent"
+                 })
+             } catch (error) {
+                 res.status(500)
+                 throw new Error("Something went wrong, Please try again!")
+             }
         res.status(201).json({
             message: 'User registration completed'
         });

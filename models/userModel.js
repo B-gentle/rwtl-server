@@ -49,7 +49,7 @@ const userSchema = mongoose.Schema({
 
   passkey: {
     type: String,
-    required: [true, "Please enter a password"],
+    // required: [true, "Please enter a password"],
     minLength: [6, "Password must be up to 6 characters"],
   },
 

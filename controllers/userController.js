@@ -7,6 +7,7 @@ const errorHandler = require("../middleWare/errorMiddleware");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 const sendEmail = require("../utilities/sendEmail");
+const addToDownline = require("../utilities/addToDownline");
 
 
 
@@ -32,61 +33,64 @@ const generateToken = (id) => {
 
 const calculateUplineBonuses = (paidAmount) => {
     const generations = [{
-        generation: "firstGeneration",
-        percentage: 25
-    },
-    {
-        generation: "secondGeneration",
-        percentage: 6
-    },
-    {
-        generation: "thirdGeneration ",
-        percentage: 5
-    },
-    {
-        generation: "fourthGeneration",
-        percentage: 2
-    },
-    {
-        generation: "fifthGeneration",
-        percentage: 1.5
-    },
-    {
-        generation: "sixthGeneration",
-        percentage: 1.5
-    },
-    {
-        generation: "seventhGeneration",
-        percentage: 1
-    },
-    {
-        generation: "eighthGeneration",
-        percentage: 1
-    },
-    {
-        generation: "ninthGeneration",
-        percentage: 1
-    },
-    {
-        generation: "tenthGeneration",
-        percentage: 1
-    }
+            generation: "firstGeneration",
+            percentage: 25
+        },
+        {
+            generation: "secondGeneration",
+            percentage: 6
+        },
+        {
+            generation: "thirdGeneration ",
+            percentage: 5
+        },
+        {
+            generation: "fourthGeneration",
+            percentage: 2
+        },
+        {
+            generation: "fifthGeneration",
+            percentage: 1.5
+        },
+        {
+            generation: "sixthGeneration",
+            percentage: 1.5
+        },
+        {
+            generation: "seventhGeneration",
+            percentage: 1
+        },
+        {
+            generation: "eighthGeneration",
+            percentage: 1
+        },
+        {
+            generation: "ninthGeneration",
+            percentage: 1
+        },
+        {
+            generation: "tenthGeneration",
+            percentage: 1
+        }
     ]
 
     const bonuses = generations.map((generation, index) => {
-        const bonusAmount = Math.round(paidAmount * (generation.percentage / 100));
-        return {
-            generation: generation.generation,
-            bonusAmount
+            const bonusAmount = Math.round(paidAmount * (generation.percentage / 100));
+            return {
+                generation: generation.generation,
+                bonusAmount
+            }
         }
-    }
 
     )
     return bonuses;
 }
 
-const checks = asyncHandler(async(req, res) => {
-    const { username, email,} = req.body
+const checks = asyncHandler(async (req, res) => {
+    const {
+        username,
+        email,
+    } = req.body
 
     const usernameExist = await User.findOne({
         username
@@ -103,7 +107,9 @@ const checks = asyncHandler(async(req, res) => {
         res.status(404)
         throw new Error("email already exist")
     }
-    res.status(200).json({message:''})
+    res.status(200).json({
+        message: ''
+    })
 })
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -284,7 +290,7 @@ const getLoggedInUser = asyncHandler(async (req, res) => {
 
     if (user) {
         user.password = undefined
-        
+
         res.status(200).json({
             data: user
         })
@@ -458,6 +464,143 @@ const resetPassword = asyncHandler(async (req, res) => {
     })
 })
 
+const addDownline = asyncHandler(async (req, res) => {
+
+    const {
+        fullname,
+        username,
+        email,
+        password,
+        phoneNo,
+        package,
+        bankName,
+        accountName,
+        accountNo
+    } = req.body;
+
+    //user validation
+    if (!fullname || !email || !password) {
+        res.status(400)
+        throw new Error("Please fill in all fields")
+    }
+
+
+    //check if user exist
+    const userExist = await User.findOne({
+        username
+    })
+    if (userExist) {
+        res.status(404)
+        throw new Error("user already exist")
+    }
+
+    //selected package
+    const selectedPackage = await Package.findById(package);
+
+    //getting all bonuses to be paid to the upline
+    // const uplineBonuses = calculateUplineBonuses(selectedPackage.amount)
+
+    if (!selectedPackage) {
+        res.status(404)
+        throw new Error("package does not exist")
+    }
+
+    const currentUser = await User.findById(req.user.id);
+
+    if (currentUser.walletBalance < selectedPackage.amount) {
+        res.status(400)
+        throw new Error("Insufficient Amount, cannot complete registration")
+    }
+
+    if (currentUser.walletBalance > selectedPackage.amount) {
+        //create new user
+        const user = new User({
+            email,
+            fullname,
+            username,
+            password,
+            phoneNo,
+            bankName,
+            accountName,
+            accountNo,
+            package: {
+                name: selectedPackage.name,
+                ID: selectedPackage._id,
+            },
+            pv: selectedPackage.pv,
+            paidAmount: selectedPackage.amount,
+            // uplineBonus: uplineBonuses
+        });
+
+        const {
+            _id
+        } = user;
+        const stringId = _id.toString();
+
+        //generate referral code and links
+        user.referralCode = generateReferralCode(stringId, user.username);
+        user.referralLink = generateReferralLink(user.referralCode)
+        //add upline
+        user.upline = {
+            username: currentUser.username,
+            ID: currentUser._id
+        };
+
+        // add user to upline's downline
+        const initialLevel = 1
+        addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, initialLevel, selectedPackage.pv);
+
+        const saveUSer = await user.save();
+        // generate Token
+        const token = generateToken(_id);
+
+        //send http-only cookie
+        res.cookie("token", token, {
+            path: "/",
+            httpOnly: true,
+            expires: new Date(Date.now() + 1000 * 86400), //1 day
+            sameSite: "none",
+            secure: true
+        })
+
+        if (saveUSer) {
+             // Reset Email
+             const url = 'https://myrechargewise.com/login'
+    const message = `
+    <h2>Hello ${user.fullname}</h2>
+    <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
+    <a href=${url} clicktracking=off>Click here to login</a>
+    <small>Best Regards</small>
+    <span>RechargeWise Technologies</span>`;
+    
+        const subject = "Registration Successful"
+        const send_to = user.email;
+        const sent_from = process.env.EMAIL_USER;
+        const reply_to = "noreply@RWTL.com";
+    
+        try {
+            await sendEmail(subject, message, send_to, sent_from, reply_to)
+            res.status(201).json({
+                success: true,
+                message: "User Registered Successfully"
+            })
+        } catch (error) {
+            res.status(500)
+            throw new Error("Something went wrong, Please try again!")
+        }
+            res.status(201).json({
+                _id,
+                username,
+                token
+            });
+        } else {
+            res.status(400)
+            throw new Error("user not created successfully")
+        }
+    }
+
+})
+
 module.exports = {
     registerUser,
     loginUser,
@@ -468,5 +611,6 @@ module.exports = {
     changePassword,
     forgotPassword,
     resetPassword,
-    checks
+    checks,
+    addDownline
 }
