@@ -225,7 +225,7 @@ const loginUser = asyncHandler(async (req, res) => {
     } = req.body
     if (!username || !password) {
         res.status(404)
-        throw new Error("Enter email and password")
+        throw new Error("Enter username and password")
     }
 
     //check if user exist

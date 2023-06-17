@@ -3,6 +3,7 @@ const Transaction = require("../models/transactionModel");
 const axios = require('axios');
 const User = require("../models/userModel");
 const Package = require('../models/packageModel');
+const DataPlan = require("../models/dataPlansModel");
 
 const currentDate = new Date();
 const currentYear = currentDate.getFullYear();
@@ -13,17 +14,24 @@ const currentMinutes = currentDate.getMinutes();
 
 const getTransactions = async (req, res) => {
     try {
-      const userId = req.user.id; 
-      const transactions = await Transaction.find({ user: userId, recipient: userId });
-  
-      if (transactions) {
-        res.status(200).json({ data: transactions });
-      }
+        const userId = req.user.id;
+        const transactions = await Transaction.find({
+            user: userId,
+            recipient: userId
+        });
+
+        if (transactions) {
+            res.status(200).json({
+                data: transactions
+            });
+        }
     } catch (error) {
-      res.status(400).json({ message: 'Error retrieving transactions' });
+        res.status(400).json({
+            message: 'Error retrieving transactions'
+        });
     }
-  };
-  
+};
+
 
 const sendMoney = asyncHandler(async (req, res) => {
     const {
@@ -133,7 +141,7 @@ const purchaseAirtime = async (req, res) => {
             // Perform additional operations here
             // Deduct the purchase amount from the user's wallet balance
             req.user.walletBalance -= amount;
-            const currentUser = await User.findById(req.user.id).populate('package');
+            const currentUser = await User.findById(req.user.id).populate('packages');
 
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
@@ -204,9 +212,142 @@ const purchaseAirtime = async (req, res) => {
     }
 };
 
+const purchaseData = async (req, res) => {
+    const {
+        network,
+        phoneNumber,
+        amount,
+        networkPlan
+    } = req.body;
+
+    // Check if required data is provided
+    if (!network || !phoneNumber || !networkPlan) {
+        return res.status(400).json({
+            message: 'Please provide all the required fields'
+        });
+    }
+
+    // Define the profit for each mobile network
+    const matchingPlan = await DataPlan.findOne({
+        "plans.productCode": networkPlan
+    });
+
+    // Check if the requested plan is available
+    if (!matchingPlan) {
+        res.status(400);
+        throw new Error("Selected Plan not available");
+    }
+
+    const plan = matchingPlan.plans.find((plan) => plan.productCode === networkPlan);
+    const profit = plan.difference;
+
+    // Check if the user has sufficient balance in their wallet
+    if (req.user.walletBalance < amount) {
+        return res.status(400).json({
+            message: 'Insufficient wallet balance'
+        });
+    }
+
+    // Calculate the bonus amount based on the profit
+    const bonusAmount = (profit * 0.4).toFixed(2);
+    const transactionId = req.user.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+
+    // Make the API call to purchase data
+    try {
+        const response = await axios.get('https://www.nellobytesystems.com/APIDatabundleV1.asp', {
+            params: {
+                UserID: process.env.CLUB_KONNECT_USER_ID,
+                APIKey: process.env.CLUB_KONNECT_API_KEY,
+                MobileNetwork: network,
+                DataPlan: networkPlan,
+                MobileNumber: phoneNumber,
+                RequestID: transactionId,
+                CallBackURL: 'https://localhost:5000/'
+            }
+        });
+
+        // Check if the data purchase was successful
+        if (response.statusText === 'OK') {
+            // Deduct the purchase amount from the user's wallet balance
+            req.user.walletBalance -= amount;
+            const currentUser = await User.findById(req.user.id).populate('package');
+
+            // Add the bonus amount to the user's balance
+            currentUser.commissionBalance += parseFloat(bonusAmount);
+
+            // Create a new transaction object
+            const transaction = new Transaction({
+                transactionId,
+                transactionType: 'data',
+                status: 'successful',
+                commission: bonusAmount,
+                network,
+                phoneNumber,
+                amount,
+                user: req.user._id
+            });
+
+            // Save the transaction object
+            await transaction.save();
+            await currentUser.save();
+
+
+            // Calculate and pay uplines based on package levels and percentages
+            let uplineUserID = currentUser.upline.ID;
+            let earningLimit = 7;
+
+            for (let i = 1; i <= earningLimit; i++) {
+
+                if (!uplineID) {
+                    break; // Break the loop if the user or their up-liner doesn't exist
+                }
+                const uplineUser = await User.findById(uplineUserID); //some DB call to fetch the user by id
+                console.log("old upline ID", uplineID)
+                 if(!uplineUser.upline){
+                     console.log(uplineUser?.upline)
+                    uplineID = uplineUser?.upline?.ID
+                }
+               
+                
+                console.log("new upline ID", uplineID)
+                // Some business logic to check user ppkg ect 
+                if (uplineUser && uplineUser.package) {
+                    const uplinePackage = await Package.findById(uplineUser.package.ID);
+
+                    if (uplinePackage && uplinePackage.transaction.level >= upperLineLimit) {
+                        const transactionProfit = parseFloat((amount * uplinePackage.transaction.percentage) / 100).toFixed(2)
+                        uplineUser.commissionBalance += parseFloat(transactionProfit);
+                        await uplineUser.save();
+
+                    }
+                    
+                    
+                }
+            }
+
+
+            return res.status(200).json({
+                message: 'Data purchase successful',
+                bonusAmount
+            });
+        } else {
+            // Return error response if the data purchase failed
+            return res.status(400).json({
+                message: 'Failed to purchase Data'
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: 'Internal server error'
+        });
+    }
+};
+
 
 module.exports = {
     purchaseAirtime,
     sendMoney,
-    getTransactions
+    getTransactions,
+    purchaseData
 }
