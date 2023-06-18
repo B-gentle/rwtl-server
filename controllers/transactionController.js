@@ -139,10 +139,9 @@ const purchaseAirtime = async (req, res) => {
         // Check if the airtime purchase was successful
         if (response.statusText === 'OK') {
             // Perform additional operations here
-            // Deduct the purchase amount from the user's wallet balance
-            req.user.walletBalance -= amount;
             const currentUser = await User.findById(req.user.id).populate('packages');
-
+             // Deduct the purchase amount from the user's wallet balance
+            currentUser.walletBalance -= amount
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
 
@@ -162,37 +161,33 @@ const purchaseAirtime = async (req, res) => {
             await transaction.save();
             await currentUser.save();
 
-            // Get the user's package details
-            const userPackage = currentUser.package;
+            // Calculate and pay uplines based on package levels and percentages
+            let uplineID = currentUser.upline.ID;
+            let earningLimit = 7;
 
-            // Check if the package has transaction levels defined
-            if (userPackage && userPackage.transaction && userPackage.transaction.level > 0) {
-                const transactionLevels = userPackage.transaction.level;
+            for (let i = 1; i <= earningLimit; i++) {
 
-                // Determine the bonus levels based on the user's package and referralBonusLevel
-                const bonusLevels = Math.min(transactionLevels, userPackage.referralBonusLevel);
-
-                // Calculate and pay uplines based on package levels and percentages
-                let uplineUser = currentUser;
-                for (let i = 0; i < bonusLevels; i++) {
-                    // Check if upline user exists
-                    if (!uplineUser.upline) {
-                        break; // No more upline to calculate bonuses for
-                    }
-
-                    const upline = await User.findById(uplineUser.upline.ID).populate('package');
-
-                    // Check if upline user has a package and earning level
-                    if (upline.package && upline.package.transaction.level >= i + 1) {
-                        const transactionProfit = parseFloat((amount * upline.package.transaction.percentage) / 100).toFixed(2);
+                if (!uplineID) {
+                    break; // Break the loop if the user or their up-liner doesn't exist
+                }
+                const upline = await User.findById(uplineID); //some DB call to fetch the user by id
+                console.log("first upline: ",upline);
+                if(upline && upline.package && upline.package.ID){
+                    const uplinePackage = await Package.findById(upline.package.ID);
+                    if (uplinePackage && uplinePackage.transaction && uplinePackage.transaction.level >= i) {
+                        console.log(uplinePackage.transaction.level)
+                        const transactionProfit = ((bonusAmount * uplinePackage.transaction.percentage) / 100).toFixed(2)
                         upline.commissionBalance += parseFloat(transactionProfit);
                         await upline.save();
                     }
-
-                    // Move to the next upline user
-                    uplineUser = upline;
+                }
+                
+                if(upline && upline.upline && upline.upline.ID){
+                    uplineID = upline.upline.ID;
+                    console.log("other uplines: ",uplineID);
                 }
             }
+
 
             return res.status(200).json({
                 message: 'Airtime purchase successful',
@@ -268,10 +263,9 @@ const purchaseData = async (req, res) => {
 
         // Check if the data purchase was successful
         if (response.statusText === 'OK') {
-            // Deduct the purchase amount from the user's wallet balance
-            req.user.walletBalance -= amount;
             const currentUser = await User.findById(req.user.id).populate('package');
-
+             // Deduct the purchase amount from the user's wallet balance
+            currentUser.walletBalance -= amount
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
 
@@ -293,7 +287,7 @@ const purchaseData = async (req, res) => {
 
 
             // Calculate and pay uplines based on package levels and percentages
-            let uplineUserID = currentUser.upline.ID;
+            let uplineID = currentUser.upline.ID;
             let earningLimit = 7;
 
             for (let i = 1; i <= earningLimit; i++) {
@@ -301,30 +295,23 @@ const purchaseData = async (req, res) => {
                 if (!uplineID) {
                     break; // Break the loop if the user or their up-liner doesn't exist
                 }
-                const uplineUser = await User.findById(uplineUserID); //some DB call to fetch the user by id
-                console.log("old upline ID", uplineID)
-                 if(!uplineUser.upline){
-                     console.log(uplineUser?.upline)
-                    uplineID = uplineUser?.upline?.ID
-                }
-               
-                
-                console.log("new upline ID", uplineID)
-                // Some business logic to check user ppkg ect 
-                if (uplineUser && uplineUser.package) {
-                    const uplinePackage = await Package.findById(uplineUser.package.ID);
-
-                    if (uplinePackage && uplinePackage.transaction.level >= upperLineLimit) {
-                        const transactionProfit = parseFloat((amount * uplinePackage.transaction.percentage) / 100).toFixed(2)
-                        uplineUser.commissionBalance += parseFloat(transactionProfit);
-                        await uplineUser.save();
-
+                const upline = await User.findById(uplineID); //some DB call to fetch the user by id
+                console.log("first upline: ",upline);
+                if(upline && upline.package && upline.package.ID){
+                    const uplinePackage = await Package.findById(upline.package.ID);
+                    if (uplinePackage && uplinePackage.transaction && uplinePackage.transaction.level >= i) {
+                        console.log(uplinePackage.transaction.level)
+                        const transactionProfit = ((profit * uplinePackage.transaction.percentage) / 100).toFixed(2)
+                        upline.commissionBalance += parseFloat(transactionProfit);
+                        await upline.save();
                     }
-                    
-                    
+                }
+                
+                if(upline && upline.upline && upline.upline.ID){
+                    uplineID = upline.upline.ID;
+                    console.log("other uplines: ",uplineID);
                 }
             }
-
 
             return res.status(200).json({
                 message: 'Data purchase successful',

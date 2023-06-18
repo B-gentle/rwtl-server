@@ -221,14 +221,14 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
     // add user to upline's downline
     const initialLevel = 1
     addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, initialLevel, selectedPackage.pv)
-    // user.passkey = undefined;
+    user.passkey = undefined;
     const registered = await user.save();
     if (registered) {
          // Reset Email
          const url = 'https://myrechargewise.com/login'
          const message = `
          <h2>Hello ${user.fullname}</h2>
-         <p>Your Registration on myrechargewise was successful for the ${user.selectedPackage.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
+         <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
          <a href=${url} clicktracking=off>Click here to login</a>
          <small>Best Regards</small>
          <span>RechargeWise Technologies</span>`;
@@ -240,9 +240,9 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
          
              try {
                  await sendEmail(subject, message, send_to, sent_from, reply_to)
-                 res.status(200).json({
+                 res.status(201).json({
                      success: true,
-                     message: "Reset email sent"
+                     message: "User Registration Approved"
                  })
              } catch (error) {
                  res.status(500)

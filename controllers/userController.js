@@ -549,45 +549,35 @@ const addDownline = asyncHandler(async (req, res) => {
         // add user to upline's downline
         const initialLevel = 1
         addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, initialLevel, selectedPackage.pv);
-
+        currentUser.walletBalance -= selectedPackage.amount
+        await currentUser.save();
         const saveUSer = await user.save();
-        // generate Token
-        const token = generateToken(_id);
-
-        //send http-only cookie
-        res.cookie("token", token, {
-            path: "/",
-            httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 86400), //1 day
-            sameSite: "none",
-            secure: true
-        })
-
+        
         if (saveUSer) {
-             // Reset Email
-             const url = 'https://myrechargewise.com/login'
-    const message = `
+            // Reset Email
+            const url = 'https://myrechargewise.com/login'
+            const message = `
     <h2>Hello ${user.fullname}</h2>
     <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
     <a href=${url} clicktracking=off>Click here to login</a>
     <small>Best Regards</small>
     <span>RechargeWise Technologies</span>`;
-    
-        const subject = "Registration Successful"
-        const send_to = user.email;
-        const sent_from = process.env.EMAIL_USER;
-        const reply_to = "noreply@RWTL.com";
-    
-        try {
-            await sendEmail(subject, message, send_to, sent_from, reply_to)
-            res.status(201).json({
-                success: true,
-                message: "User Registered Successfully"
-            })
-        } catch (error) {
-            res.status(500)
-            throw new Error("Something went wrong, Please try again!")
-        }
+
+            const subject = "Registration Successful"
+            const send_to = user.email;
+            const sent_from = process.env.EMAIL_USER;
+            const reply_to = "noreply@RWTL.com";
+
+            try {
+                await sendEmail(subject, message, send_to, sent_from, reply_to)
+                res.status(201).json({
+                    success: true,
+                    message: "User Registered Successfully"
+                })
+            } catch (error) {
+                res.status(500)
+                throw new Error("Something went wrong, Please try again!")
+            }
             res.status(201).json({
                 _id,
                 username,
