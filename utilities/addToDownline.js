@@ -1,104 +1,64 @@
 const User = require("../models/userModel")
 const Package = require("../models/packageModel");
 
-const addToDownline = async (username, uplineID, userId, packageID, packageName, level = 1, userPv) => {
+const addToDownline = async (username, uplineID, userId, packageID, packageName, userPv) => {
     try {
         // add user to upline's downline
-        await User.updateOne({
-            _id: uplineID
-        }, {
-            $addToSet: {
-                downlines: {
-                    userId,
-                    username,
-                    level,
-                    pv: userPv,
-                    package: {
-                        name: packageName
+        let upline = await User.findById(uplineID);
+        console.log("run")
+        let level = 1
+
+        while (upline) {
+            // Create a new downline object
+            const downline = {
+                userId,
+                username,
+                level,
+                pv: userPv,
+                package: {
+                    name: packageName
+                },
+            };
+            // Push the downline to the upline's downlines array
+            upline?.downlines.push(downline);
+            await upline.save();
+            //pay referral bonus
+            const userPackage = await Package.findById(packageID);
+            if (upline && upline.package && upline.package.ID) {
+
+                const uplinePackage = await Package.findById(upline.package.ID);
+                const instantCashBack = uplinePackage.instantCashBack;
+
+                for (const cashBack of instantCashBack) {
+                    const {
+                        level,
+                        bonusPercentage
+                    } = cashBack;
+                    console.log(upline) 
+                    if (level <= upline.referralBonusLevel) {
+                        console.log(level);
+                        const referralBonus = userPackage?.amount * bonusPercentage;
+                        console.log('referralBonus:',referralBonus)
+                        upline.withdrawableCommission += referralBonus;
+                        upline.commissionBalance += referralBonus;
+                        upline.pv += uplinePackage.pv
+                        console.log(`Paid referral bonus of ${referralBonus} to upline at level ${level}`);
+                        await upline.save();
                     }
+
                 }
             }
-        });
-
-        const selectedPackage = await Package.findById(packageID);
-        const user = await User.findById(userId).populate("package");
-        const userPackage = await Package.findById(user.package.ID);
-        const userPackageLevel = userPackage.referralBonusLevel;
-        const activationFee = selectedPackage.amount;
-        const referralBonusAmount = activationFee * 0.25; // 25% of the activation fee
-
-        // Stop giving upline bonus if the referralBonusLevel is reached
-        if (level == 1) {
-            await User.updateOne(
-                { _id: uplineID },
-                {
-                    $addToSet: {
-                        directReferral: {
-                            userId,
-                            username,
-                            pv: userPv,
-                            package: packageName
-                        }
-                    }
+            if (upline && upline.upline && upline.upline.ID) {
+                upline = await User.findById(upline.upline.ID);
+                level++;
+                if (!upline) {
+                    break;
                 }
-            )
-        } else {
-            await User.updateOne(
-                { _id: uplineID },
-                {
-                    $push: {
-                        indirectReferral: {
-                            userId,
-                            username,
-                            pv: userPv,
-                            level,
-                            package: packageName
-                        }
-                    }
-                }
-            )
+            }
         }
 
-        if (level <= userPackageLevel) {
-            await User.updateOne(
-                { _id: uplineID },
-                {
-                    $push: {
-                        uplineBonus: {
-                            generation: `Generation ${level}`,
-                            bonusAmount: referralBonusAmount,
-                        },
-                    },
-                    $inc: {
-                        referralBonus: referralBonusAmount,
-                        pv: userPv
-                    }, // Increment referralBonus by referralBonusAmount
-                }
-            );
-        } else {
-            await User.updateOne(
-                { _id: uplineID },
-                {
-                    $push: {
-                        uplineBonus: {
-                            generation: `Generation ${level}`,
-                            bonusAmount: 0,
-                        },
-                    },
-                    $inc: { pv: userPv },
-                }
-            );
-        }
-
-        // get upline's upline
-        const upline = await User.findById(uplineID)
-
-
-        //if upline Exist, add user to upline's downline
-        if (upline?.upline) {
-            await addToDownline(username, upline.upline.ID, userId, selectedPackage._id, selectedPackage.name, level + 1, userPv)
-        }
-    } catch (error) {
+    } catch (err) {
+        console.log(err)
     }
 }
 

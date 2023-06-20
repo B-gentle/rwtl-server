@@ -200,16 +200,16 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const saveUSer = await user.save();
     // generate Token
-    const token = generateToken(_id);
+    // const token = generateToken(_id);
 
     //send http-only cookie
-    res.cookie("token", token, {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 86400), //1 day
-        sameSite: "none",
-        secure: true
-    })
+    // res.cookie("token", token, {
+    //     path: "/",
+    //     httpOnly: true,
+    //     expires: new Date(Date.now() + 1000 * 86400), //1 day
+    //     sameSite: "none",
+    //     secure: true
+    // })
 
     if (saveUSer) {
         res.status(201).json({
@@ -479,7 +479,7 @@ const addDownline = asyncHandler(async (req, res) => {
     } = req.body;
 
     //user validation
-    if (!fullname || !email || !password) {
+    if (!fullname || !email || !password || !username) {
         res.status(400)
         throw new Error("Please fill in all fields")
     }
@@ -509,7 +509,7 @@ const addDownline = asyncHandler(async (req, res) => {
 
     if (currentUser.walletBalance < selectedPackage.amount) {
         res.status(400)
-        throw new Error("Insufficient Amount, cannot complete registration")
+        throw new Error("Insufficient Amount, cannot continue registration")
     }
 
     if (currentUser.walletBalance > selectedPackage.amount) {
@@ -540,6 +540,7 @@ const addDownline = asyncHandler(async (req, res) => {
         //generate referral code and links
         user.referralCode = generateReferralCode(stringId, user.username);
         user.referralLink = generateReferralLink(user.referralCode)
+        user.walletBalance += selectedPackage.amount * 0.25
         //add upline
         user.upline = {
             username: currentUser.username,
@@ -547,21 +548,20 @@ const addDownline = asyncHandler(async (req, res) => {
         };
 
         // add user to upline's downline
-        const initialLevel = 1
-        addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, initialLevel, selectedPackage.pv);
+        // addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, selectedPackage.pv);
         currentUser.walletBalance -= selectedPackage.amount
         await currentUser.save();
         const saveUSer = await user.save();
-        
+
         if (saveUSer) {
             // Reset Email
             const url = 'https://myrechargewise.com/login'
             const message = `
-    <h2>Hello ${user.fullname}</h2>
-    <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
-    <a href=${url} clicktracking=off>Click here to login</a>
-    <small>Best Regards</small>
-    <span>RechargeWise Technologies</span>`;
+                <h2>Hello ${user.fullname}</h2>
+                <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
+                <a href=${url} clicktracking=off>Click here to login</a>
+                <small>Best Regards</small>
+            <span>RechargeWise Technologies</span>`;
 
             const subject = "Registration Successful"
             const send_to = user.email;
@@ -581,12 +581,54 @@ const addDownline = asyncHandler(async (req, res) => {
             res.status(201).json({
                 _id,
                 username,
-                token
+                message: "User Registered Successfully"
             });
         } else {
             res.status(400)
             throw new Error("user not created successfully")
         }
+    }
+
+})
+
+const deleteUser = asyncHandler(async (req, res) => {
+    const {
+        userId
+    } = req.body;
+    try {
+        // Find the user to be deleted
+        const user = await User.findById(userId);
+        if (!user) {
+            res.status(400);
+            throw new Error('User not found');
+        }
+        // Update the upline's downlines
+        if (user.upline.ID) {
+            const upline = await User.findById(user.upline.ID);
+            if (upline) {
+                upline.downlines = upline.downlines.filter((downline) => downline.userId.toString() !== userId);
+                await upline.save();
+            }
+        }
+
+        // Remove the user from other user's downlines
+        await User.updateMany({
+            'downlines.userId': userId
+        }, {
+            $pull: {
+                downlines: {
+                    userId: userId
+                }
+            }
+        });
+
+        // Delete the user document
+        await User.findByIdAndDelete(userId);
+        res.status(200).json({
+            message: 'user deleted successfully'
+        })
+    } catch (error) {
+        console.error('Error deleting user:', error.message);
     }
 
 })
@@ -602,5 +644,6 @@ module.exports = {
     forgotPassword,
     resetPassword,
     checks,
-    addDownline
+    addDownline,
+    deleteUser
 }

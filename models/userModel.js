@@ -1,17 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const uplineBonusSchema = mongoose.Schema({
-  generation: {
-    type: String,
-    required: true,
-  },
-  bonusAmount: {
-    type: Number,
-    default: 0,
-  },
-})
-
 const userSchema = mongoose.Schema({
   fullname: {
     type: String,
@@ -142,17 +131,12 @@ const userSchema = mongoose.Schema({
     default: 0
   },
 
-  uplineBonus: {
-    type: [uplineBonusSchema],
-    default: []
+  commissionBalance: {
+    type: Number,
+    default: 0
   },
 
-  commissionEarned: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Commission",
-    // default: 0
-  },
-  commissionBalance: {
+  withdrawableCommission: {
     type: Number,
     default: 0
   },

@@ -14,17 +14,23 @@ const packageSchema = mongoose.Schema({
         required: true
     },
 
-    instantCashBack: {
-        type: Number,
-        default: 0.25,
-    },
+    instantCashBack: [
+        {
+            level: {
+                type: Number
+            },
+            bonusPercentage: {
+                type: Number
+            },
+        }
+    ],
 
     transaction: {
         level: {
             type: Number,
             required: true
         },
-        percentage:{
+        percentage: {
             type: Number,
             required: true
         }
@@ -38,5 +44,11 @@ const packageSchema = mongoose.Schema({
     timestamps: true
 })
 
+
+
 const Package = mongoose.model("Package", packageSchema)
+
 module.exports = Package;
+
+
+

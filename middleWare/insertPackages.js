@@ -21,4 +21,26 @@ const insertPackages = async () => {
   }
 };
 
+// const instantCashBackData = [
+//   { "level": 1, "bonusPercentage": 0.25 },
+//   { "level": 2, "bonusPercentage": 0.06 },
+//   { "level": 3, "bonusPercentage": 0.05 },
+//   { "level": 4, "bonusPercentage": 0.02 },
+//   { "level": 5, "bonusPercentage": 0.015 },
+//   { "level": 6, "bonusPercentage": 0.015 },
+//   { "level": 7, "bonusPercentage": 0.01 },
+//   { "level": 8, "bonusPercentage": 0.01 },
+//   { "level": 9, "bonusPercentage": 0.01 },
+//   { "level": 10, "bonusPercentage": 0.01 }
+//   ]
+  
+  
+//   Package.updateMany({}, { instantCashBack: instantCashBackData })
+//     .then(() => {
+//       console.log('Instant Cash Back data updated successfully');
+//     })
+//     .catch((error) => {
+//       console.error('Error updating Instant Cash Back data:', error);
+//     });
+
 insertPackages();
