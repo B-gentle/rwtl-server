@@ -35,7 +35,7 @@ const insertPackages = async () => {
 //   ]
   
   
-//   Package.updateMany({}, { instantCashBack: instantCashBackData })
+//   Package.updateMany({}, { instantCashBack: 0.25})
 //     .then(() => {
 //       console.log('Instant Cash Back data updated successfully');
 //     })

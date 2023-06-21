@@ -8,6 +8,7 @@ const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 const sendEmail = require("../utilities/sendEmail");
 const addToDownline = require("../utilities/addToDownline");
+const calculateUplineBonuses = require("../utilities/uplineBonuses");
 
 
 
@@ -31,60 +32,60 @@ const generateToken = (id) => {
     })
 }
 
-const calculateUplineBonuses = (paidAmount) => {
-    const generations = [{
-            generation: "firstGeneration",
-            percentage: 25
-        },
-        {
-            generation: "secondGeneration",
-            percentage: 6
-        },
-        {
-            generation: "thirdGeneration ",
-            percentage: 5
-        },
-        {
-            generation: "fourthGeneration",
-            percentage: 2
-        },
-        {
-            generation: "fifthGeneration",
-            percentage: 1.5
-        },
-        {
-            generation: "sixthGeneration",
-            percentage: 1.5
-        },
-        {
-            generation: "seventhGeneration",
-            percentage: 1
-        },
-        {
-            generation: "eighthGeneration",
-            percentage: 1
-        },
-        {
-            generation: "ninthGeneration",
-            percentage: 1
-        },
-        {
-            generation: "tenthGeneration",
-            percentage: 1
-        }
-    ]
+// const calculateUplineBonuses = (paidAmount) => {
+//     const generations = [{
+//             generation: "firstGeneration",
+//             percentage: 25
+//         },
+//         {
+//             generation: "secondGeneration",
+//             percentage: 6
+//         },
+//         {
+//             generation: "thirdGeneration ",
+//             percentage: 5
+//         },
+//         {
+//             generation: "fourthGeneration",
+//             percentage: 2
+//         },
+//         {
+//             generation: "fifthGeneration",
+//             percentage: 1.5
+//         },
+//         {
+//             generation: "sixthGeneration",
+//             percentage: 1.5
+//         },
+//         {
+//             generation: "seventhGeneration",
+//             percentage: 1
+//         },
+//         {
+//             generation: "eighthGeneration",
+//             percentage: 1
+//         },
+//         {
+//             generation: "ninthGeneration",
+//             percentage: 1
+//         },
+//         {
+//             generation: "tenthGeneration",
+//             percentage: 1
+//         }
+//     ]
 
-    const bonuses = generations.map((generation, index) => {
-            const bonusAmount = Math.round(paidAmount * (generation.percentage / 100));
-            return {
-                generation: generation.generation,
-                bonusAmount
-            }
-        }
+//     const bonuses = generations.map((generation, index) => {
+//             const bonusAmount = Math.round(paidAmount * (generation.percentage / 100));
+//             return {
+//                 generation: generation.generation,
+//                 bonusAmount
+//             }
+//         }
 
-    )
-    return bonuses;
-}
+//     )
+//     return bonuses;
+// }
 
 const checks = asyncHandler(async (req, res) => {
     const {
@@ -484,7 +485,6 @@ const addDownline = asyncHandler(async (req, res) => {
         throw new Error("Please fill in all fields")
     }
 
-
     //check if user exist
     const userExist = await User.findOne({
         username
@@ -496,9 +496,6 @@ const addDownline = asyncHandler(async (req, res) => {
 
     //selected package
     const selectedPackage = await Package.findById(package);
-
-    //getting all bonuses to be paid to the upline
-    // const uplineBonuses = calculateUplineBonuses(selectedPackage.amount)
 
     if (!selectedPackage) {
         res.status(404)
@@ -512,8 +509,8 @@ const addDownline = asyncHandler(async (req, res) => {
         throw new Error("Insufficient Amount, cannot continue registration")
     }
 
-    if (currentUser.walletBalance > selectedPackage.amount) {
-        //create new user
+    if (currentUser.walletBalance >= selectedPackage.amount) {
+        //     //create new user
         const user = new User({
             email,
             fullname,
@@ -537,24 +534,27 @@ const addDownline = asyncHandler(async (req, res) => {
         } = user;
         const stringId = _id.toString();
 
-        //generate referral code and links
+        //     //generate referral code and links
         user.referralCode = generateReferralCode(stringId, user.username);
         user.referralLink = generateReferralLink(user.referralCode)
-        user.walletBalance += selectedPackage.amount * 0.25
-        //add upline
+        user.walletBalance += selectedPackage.amount * selectedPackage.instantCashBack
+
+        //     //add upline
         user.upline = {
             username: currentUser.username,
             ID: currentUser._id
         };
 
-        // add user to upline's downline
-        // addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, selectedPackage.pv);
+        //     // add user to upline's downline
+        addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
         currentUser.walletBalance -= selectedPackage.amount
+        //getting all bonuses to be paid to the upline
+        calculateUplineBonuses(user.upline.ID, selectedPackage._id)
         await currentUser.save();
         const saveUSer = await user.save();
 
         if (saveUSer) {
-            // Reset Email
+            //         // Reset Email
             const url = 'https://myrechargewise.com/login'
             const message = `
                 <h2>Hello ${user.fullname}</h2>
@@ -567,17 +567,12 @@ const addDownline = asyncHandler(async (req, res) => {
             const send_to = user.email;
             const sent_from = process.env.EMAIL_USER;
             const reply_to = "noreply@RWTL.com";
-
             try {
                 await sendEmail(subject, message, send_to, sent_from, reply_to)
-                res.status(201).json({
-                    success: true,
-                    message: "User Registered Successfully"
-                })
             } catch (error) {
-                res.status(500)
-                throw new Error("Something went wrong, Please try again!")
+                
             }
+
             res.status(201).json({
                 _id,
                 username,
@@ -587,6 +582,9 @@ const addDownline = asyncHandler(async (req, res) => {
             res.status(400)
             throw new Error("user not created successfully")
         }
+    }else{
+        res.status(400)
+        throw new Error("Insufficient Wallet Balance")
     }
 
 })

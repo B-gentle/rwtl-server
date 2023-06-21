@@ -131,6 +131,16 @@ const userSchema = mongoose.Schema({
     default: 0
   },
 
+  directPv: {
+    type: Number,
+    default: 0
+  },
+
+  indirectPv: {
+    type: Number,
+    default: 0
+  },
+
   commissionBalance: {
     type: Number,
     default: 0
