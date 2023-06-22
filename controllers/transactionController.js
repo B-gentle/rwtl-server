@@ -42,6 +42,7 @@ const sendMoney = asyncHandler(async (req, res) => {
 
     try {
 
+        const currentUser = await User.findById(req.user.id)
         const receiver = await User.findOne({
             username
         });
@@ -51,23 +52,71 @@ const sendMoney = asyncHandler(async (req, res) => {
             })
         }
 
-        if (req.user.walletBalance <= amount) {
+        if (currentUser.walletBalance < amount) {
             res.status(400)
             throw new Error("insufficient funds")
         }
 
-        req.user.walletBalance -= amount;
-        receiver.walletBalance += amount;
-        await req.user.save();
+        currentUser.walletBalance -= Number(amount);
+        receiver.walletBalance += Number(amount);
+        await currentUser.save();
         await receiver.save();
 
 
-        const transactionId = username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+        const transactionId = currentUser.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
         const transaction = new Transaction({
             transactionId,
-            transactionType: 'transfer',
-            user: req.user._id,
+            transactionType: 'fundTransfer',
+            user: req.user.id,
             recipient: receiver.username,
+            receiverNewWalletBalance: receiver.walletBalance,
+            senderNewWalletBalance: currentUser.walletBalance,
+            receiverPrevWalletBalance: receiver.walletBalance -= Number(amount),
+            senderPrevWalletBalance: currentUser.walletBalance += Number(amount),
+            amount,
+            status: 'successful',
+        })
+        await transaction.save()
+        return res.status(200).json({
+            message: 'Transfer successful'
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500)
+        throw new Error("Transaction failed")
+    }
+})
+
+const transferCommission = asyncHandler(async (req, res) => {
+    const {
+        amount
+    } = req.body;
+
+    try {
+
+        const currentUser = await User.findById(req.user.id);
+
+        if (currentUser.withdrawableCommission < amount) {
+            res.status(400)
+            throw new Error("insufficient funds")
+        }
+
+        if (currentUser.withdrawableCommission >= amount){
+            currentUser.withdrawableCommission -= amount;
+            currentUser.walletBalance += Number(amount);
+        }
+
+        await currentUser.save();
+
+        const transactionId = currentUser.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+        const transaction = new Transaction({
+            transactionId,
+            transactionType: 'commissionTransfer',
+            prevCommissionBalance: currentUser.withdrawableCommission - Number(amount),
+            newCommissionBalance: currentUser.withdrawableCommission,
+            prevWalletBalance: currentUser.walletBalance - Number(amount),
+            newWalletBalance: currentUser.walletBalance,
+            user: req.user._id,
             amount,
             status: 'successful',
         })
@@ -140,12 +189,13 @@ const purchaseAirtime = async (req, res) => {
             }
         });
         // Check if the airtime purchase was successful
-        if (response.statusText === 'OK') {
-            // Perform additional operations here
+        if (response.status === 200) {
             // Deduct the purchase amount from the user's wallet balance
-            currentUser.walletBalance -= amount
+          currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
+            currentUser.withdrawableCommission += parseFloat(bonusAmount);
+            await currentUser.save();
 
             // Create a new transaction object
             const transaction = new Transaction({
@@ -155,13 +205,14 @@ const purchaseAirtime = async (req, res) => {
                 commission: bonusAmount,
                 network,
                 phoneNumber,
+                prevWalletBalance: currentUser.walletBalance + Number(amount),
+                newWalletBalance: currentUser.walletBalance,
                 amount,
                 user: req.user._id
             });
 
             // Save the transaction object
             await transaction.save();
-            await currentUser.save();
 
             // Calculate and pay uplines based on package levels and percentages
             payUplines(currentUser.upline.ID, bonusAmount)
@@ -242,12 +293,14 @@ const purchaseData = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.statusText === 'OK') {
+        if (response.status === 200) {
 
             // Deduct the purchase amount from the user's wallet balance
-            currentUser.walletBalance -= amount
+            currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
+            currentUser.withdrawableCommission += parseFloat(bonusAmount);
+            await currentUser.save();
 
             // Create a new transaction object
             const transaction = new Transaction({
@@ -257,13 +310,14 @@ const purchaseData = async (req, res) => {
                 commission: bonusAmount,
                 network,
                 phoneNumber,
+                prevWalletBalance: currentUser.walletBalance + Number(amount),
+                newWalletBalance: currentUser.walletBalance,
                 amount,
                 user: req.user._id
             });
 
             // Save the transaction object
             await transaction.save();
-            await currentUser.save();
 
             //database transaction - learn it.
 
@@ -348,8 +402,8 @@ const cableBills = async (req, res) => {
                 transactionType: 'cableTv',
                 status: 'successful',
                 commission: bonusAmount,
-                network,
-                phoneNumber,
+                cableCompany: network,
+                IUC: number,
                 amount,
                 user: req.user._id
             });
@@ -441,8 +495,8 @@ const electricityBills = async (req, res) => {
                 transactionType: 'electricity',
                 status: 'successful',
                 commission: bonusAmount,
-                network,
-                phoneNumber: MeterNo,
+                electricCompany: ElectricCompany,
+                meterNo: MeterNo,
                 amount,
                 user: req.user._id
             });
@@ -482,5 +536,6 @@ module.exports = {
     getTransactions,
     purchaseData,
     cableBills,
-    electricityBills
+    electricityBills,
+    transferCommission
 }

@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema({
     transactionType: {
         type: String,
         required: true,
-        enum: ['airtime', 'data', 'cableTv', 'exams', 'electricity', 'transfer']
+        enum: ['airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade']
     },
 
     //export all the enums so as to avoid typos
@@ -32,7 +32,7 @@ const transactionSchema = new mongoose.Schema({
 
     commission: {
         type: Number,
-        required: function(){
+        required: function () {
             return this.type === 'airtime' || this.type === 'data'
         }
     },
@@ -43,8 +43,8 @@ const transactionSchema = new mongoose.Schema({
 
     recipient: {
         type: String,
-        required: function() {
-            return this.type === 'transfer'
+        required: function () {
+            return this.type === 'fundTransfer'
         }
     },
 
@@ -60,6 +60,14 @@ const transactionSchema = new mongoose.Schema({
             return this.type === 'cableTv'
         }
     },
+
+    meterNo: {
+        type: String,
+        required: function () {
+            return this.type === 'electricity'
+        }
+    },
+
     network: {
         type: String,
         required: function () {
@@ -73,10 +81,74 @@ const transactionSchema = new mongoose.Schema({
         }
     },
 
+    ElectricCompany: {
+        type: String,
+        required: function () {
+            return this.type === 'electricity'
+        }
+    },
+
     amount: {
         type: Number,
         required: true
-    }
+    },
+
+    prevCommissionBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'commissionTransfer'
+        }
+    },
+
+    newCommissionBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'commissionTransfer'
+        }
+    },
+
+    prevWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'commissionTransfer' 
+        }
+    },
+
+    newWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'commissionTransfer'
+        }
+    },
+
+    senderPrevWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'fundTransfer'
+        }
+    },
+
+    receiverPrevWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'fundTransfer'
+        }
+    },
+
+    receiverNewWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'fundTransfer'
+        }
+    },
+
+    senderNewWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'fundTransfer'
+        }
+    },
+
 }, {
     timestamps: true
 });
