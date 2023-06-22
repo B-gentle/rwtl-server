@@ -337,6 +337,16 @@ const updateUser = asyncHandler(async (req, res) => {
 
 })
 
+const upgradePackage = asyncHandler(async(req, res) => {
+    const {package} = req.body;
+    const currentUser = await User.findById(req.user.id)
+    const currentUserPackage = await Package.findById(currentUser.package.ID)
+    const selectedPackage = await Package.findById(package)
+    packageDifference = selectedPackage.amount - currentUserPackage.amount
+    res.status(200).json({data: packageDifference})
+    const packages = await Package.find();
+})
+
 const changePassword = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id)
     if (!user) {
@@ -643,5 +653,6 @@ module.exports = {
     resetPassword,
     checks,
     addDownline,
-    deleteUser
+    deleteUser,
+    upgradePackage
 }
