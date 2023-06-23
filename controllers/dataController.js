@@ -6,15 +6,17 @@ const getDataPlan = async (req, res) => {
     const {
         networkCode
     } = req.body
+
     try {
-        const dataPlan = await DataPlan.find({
-            networkCode
-        });
-        if (dataPlan) {
-            res.status(200).json({
-                data: dataPlan
-            })
-        }
+        const response = await axios.get(`${process.env.CLUB_KONNECT_URl}/APIDatabundlePlansV2.asp`);
+        const selectedNetwork = Object.values(response.data.MOBILE_NETWORK).find((network) =>
+            network.some((object) => object.ID === networkCode)
+        );
+
+        const selectedPlan = selectedNetwork.map((plan) => plan.PRODUCT);
+        res.status(200).json({
+            data: selectedPlan
+        })
     } catch (error) {
         res.status(400)
         throw new Error(error)

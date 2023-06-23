@@ -101,7 +101,7 @@ const transferCommission = asyncHandler(async (req, res) => {
             throw new Error("insufficient funds")
         }
 
-        if (currentUser.withdrawableCommission >= amount){
+        if (currentUser.withdrawableCommission >= amount) {
             currentUser.withdrawableCommission -= amount;
             currentUser.walletBalance += Number(amount);
         }
@@ -189,9 +189,9 @@ const purchaseAirtime = async (req, res) => {
             }
         });
         // Check if the airtime purchase was successful
-        if (response.status === 200) {
+        if (response.data.status === 200) {
             // Deduct the purchase amount from the user's wallet balance
-          currentUser.walletBalance -= Number(amount)
+            currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
             currentUser.withdrawableCommission += parseFloat(bonusAmount);
@@ -225,7 +225,7 @@ const purchaseAirtime = async (req, res) => {
         } else {
             // Return error response if the airtime purchase failed
             return res.status(400).json({
-                message: 'Failed to purchase airtime'
+                message: response.data.status
             });
         }
     } catch (error) {
@@ -251,19 +251,23 @@ const purchaseData = async (req, res) => {
         });
     }
 
-    // Define the profit for each mobile network
-    const matchingPlan = await DataPlan.findOne({
-        "plans.productCode": networkPlan
-    });
+    const discountRates = {
+        '01': 3.5, // MTN @ 3.5%
+        '02': 8, // Glo @ 8%
+        '04': 3.5, // Airtel @ 3.5%
+        '03': 6.5 // 9mobile @ 6.5%
+    };
 
-    // Check if the requested plan is available
-    if (!matchingPlan) {
-        res.status(400);
-        throw new Error("Selected Plan not available");
+    // Check if the provided mobile network is valid
+    if (!discountRates.hasOwnProperty(network)) {
+        return res.status(400).json({
+            message: 'Invalid mobile network code'
+        });
     }
 
-    const plan = matchingPlan.plans.find((plan) => plan.productCode === networkPlan);
-    const profit = plan.difference;
+    // Calculate the bonus amount based on the discount rate
+    const discountRate = discountRates[network];
+    const bonusAmount = (amount * (discountRate / 100) * 0.4).toFixed(2);
 
     const currentUser = await User.findById(req.user.id).populate('package');
 
@@ -275,9 +279,8 @@ const purchaseData = async (req, res) => {
     }
 
     // Calculate the bonus amount based on the profit
-    const bonusAmount = (profit * 0.4).toFixed(2);
     const transactionId = req.user.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
-
+    const profit = Number(amount) * (3.5 / 100)
     // Make the API call to purchase data
     try {
         const response = await axios.get('https://www.nellobytesystems.com/APIDatabundleV1.asp', {
@@ -293,8 +296,7 @@ const purchaseData = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.status === 200) {
-
+        if (response.data.status === 200) {
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
@@ -331,7 +333,7 @@ const purchaseData = async (req, res) => {
         } else {
             // Return error response if the data purchase failed
             return res.status(400).json({
-                message: 'Failed to purchase Data'
+                message: response.data.status
             });
         }
     } catch (error) {
@@ -357,7 +359,7 @@ const cableBills = async (req, res) => {
         });
     }
 
-    // Define the profit for each mobile network
+    // Define the profit for each cable provider
     const profit = amount * 0.80
 
     const currentUser = await User.findById(req.user.id).populate('package');
