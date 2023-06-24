@@ -30,7 +30,7 @@ const calculateUplineBonuses = async (uplineID, packageID) => {
                         upline.withdrawableCommission += referralBonus;
                         upline.commissionBalance += referralBonus;
                         upline.pv += uplinePackage.pv
-                        if (level === 1) {
+                        if (userLevel === 1) {
                             upline.directPv += uplinePackage.pv
                         } else {
                             upline.indirectPv += uplinePackage.pv

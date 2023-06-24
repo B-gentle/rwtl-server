@@ -43,6 +43,7 @@ const transactionSchema = new mongoose.Schema({
 
     recipient: {
         type: String,
+        ref: "User",
         required: function () {
             return this.type === 'fundTransfer'
         }

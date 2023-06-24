@@ -9,6 +9,6 @@ router.post("/subscribedish", protect, cableBills);
 router.post("/transfercomm", protect, transferCommission);
 router.post("/electricity", protect, electricityBills);
 router.patch("/sendmoney", protect, sendMoney);
-router.get("/getTransactions", protect, getTransactions)
+router.get("/get-transactions", protect, getTransactions)
 
 module.exports = router;

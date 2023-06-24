@@ -17,9 +17,12 @@ const getTransactions = async (req, res) => {
     try {
         const userId = req.user.id;
         const transactions = await Transaction.find({
-            user: userId,
-            recipient: userId
-        });
+            $or: [
+              { user: userId },
+              { recipient: req.user.username }
+            ]
+          });
+          
 
         if (transactions) {
             res.status(200).json({
