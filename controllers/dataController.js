@@ -39,24 +39,8 @@ const getCablePlans = asyncHandler(async (req, res) => {
 
 })
 
-const getElectricityCompany = asyncHandler(async (req, res) => {
-    const {
-        cableNetwork
-    } = req.body;
-    const response = await axios.get(`${process.env.CLUB_KONNECT_URl}/APIElectricityDiscosV1.asp`);
-
-    const selectedCable = Object.values(response.data.TV_ID).find((cable) =>
-        cable.some((object) => object.ID === cableNetwork)
-    );
-    const selectedProducts = selectedCable.map((product) => product.PRODUCT);
-    res.status(200).json({
-        data: selectedProducts
-    })
-
-})
 
 module.exports = {
     getDataPlan,
     getCablePlans,
-    getElectricityCompany
 }

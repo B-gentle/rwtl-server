@@ -141,6 +141,11 @@ const userSchema = mongoose.Schema({
     default: 0
   },
 
+  monthlyPv: {
+    type: Number,
+    default: 0
+  },
+
   commissionBalance: {
     type: Number,
     default: 0

@@ -210,6 +210,8 @@ const purchaseAirtime = async (req, res) => {
                 phoneNumber,
                 prevWalletBalance: currentUser.walletBalance + Number(amount),
                 newWalletBalance: currentUser.walletBalance,
+                prevCommissionBalance: currentUser.withdrawableCommission - bonusAmount,
+                newCommissionBalance: currentUser.withdrawableCommission,
                 amount,
                 user: req.user._id
             });
@@ -317,6 +319,8 @@ const purchaseData = async (req, res) => {
                 phoneNumber,
                 prevWalletBalance: currentUser.walletBalance + Number(amount),
                 newWalletBalance: currentUser.walletBalance,
+                prevCommissionBalance: currentUser.withdrawableCommission - bonusAmount,
+                newCommissionBalance: currentUser.withdrawableCommission,
                 amount,
                 user: req.user._id
             });
@@ -349,21 +353,21 @@ const purchaseData = async (req, res) => {
 
 const cableBills = async (req, res) => {
     const {
-        network,
+        cableNetwork,
         number,
         amount,
         package
     } = req.body;
 
     // Check if required data is provided
-    if (!network || !number || !package) {
+    if (!cableNetwork || !number || !package) {
         return res.status(400).json({
             message: 'Please provide all the required fields'
         });
     }
 
     // Define the profit for each cable provider
-    const profit = amount * 0.80
+    const profit = Number(amount) * (0.80/100)
 
     const currentUser = await User.findById(req.user.id).populate('package');
 
@@ -384,7 +388,7 @@ const cableBills = async (req, res) => {
             params: {
                 UserID: process.env.CLUB_KONNECT_USER_ID,
                 APIKey: process.env.CLUB_KONNECT_API_KEY,
-                CableTV: network,
+                CableTV: cableNetwork,
                 Package: package,
                 SmartCardNo: number,
                 PhoneNo: currentUser.phoneNo,
@@ -394,12 +398,14 @@ const cableBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.statusText === 'OK') {
+        if (response.data.status === 'OK') {
 
             // Deduct the purchase amount from the user's wallet balance
-            currentUser.walletBalance -= amount
+            currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
+            currentUser.withdrawableCommission += parseFloat(bonusAmount);
+            await currentUser.save();
 
             // Create a new transaction object
             const transaction = new Transaction({
@@ -407,15 +413,18 @@ const cableBills = async (req, res) => {
                 transactionType: 'cableTv',
                 status: 'successful',
                 commission: bonusAmount,
-                cableCompany: network,
+                cableCompany: cableNetwork,
                 IUC: number,
+                prevWalletBalance: currentUser.walletBalance + Number(amount),
+                newWalletBalance: currentUser.walletBalance,
+                prevCommissionBalance: currentUser.withdrawableCommission - bonusAmount,
+                newCommissionBalance: currentUser.withdrawableCommission,
                 amount,
                 user: req.user._id
             });
 
             // Save the transaction object
             await transaction.save();
-            await currentUser.save();
 
             //database transaction - learn it.
 
@@ -429,7 +438,7 @@ const cableBills = async (req, res) => {
         } else {
             // Return error response if the data purchase failed
             return res.status(400).json({
-                message: 'Payment Failed'
+                message: response.data.status
             });
         }
     } catch (error) {
@@ -456,7 +465,7 @@ const electricityBills = async (req, res) => {
     }
 
     // Define the profit for each mobile network
-    const profit = amount * 0.40
+    const profit = Number(amount) * (0.40/100)
 
     const currentUser = await User.findById(req.user.id).populate('package');
 
@@ -487,12 +496,14 @@ const electricityBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.statusText === 'OK') {
+        if (response.data.status === 200) {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= amount
             // Add the bonus amount to the user's balance
             currentUser.commissionBalance += parseFloat(bonusAmount);
+            currentUser.withdrawableCommission += parseFloat(bonusAmount);
+            await currentUser.save();
 
             // Create a new transaction object
             const transaction = new Transaction({
@@ -502,13 +513,16 @@ const electricityBills = async (req, res) => {
                 commission: bonusAmount,
                 electricCompany: ElectricCompany,
                 meterNo: MeterNo,
+                prevWalletBalance: currentUser.walletBalance + Number(amount),
+                newWalletBalance: currentUser.walletBalance,
+                prevCommissionBalance: currentUser.withdrawableCommission - bonusAmount,
+                newCommissionBalance: currentUser.withdrawableCommission,
                 amount,
                 user: req.user._id
             });
 
             // Save the transaction object
             await transaction.save();
-            await currentUser.save();
 
             //database transaction - learn it.
 
@@ -516,13 +530,13 @@ const electricityBills = async (req, res) => {
             payUplines(currentUser.upline.ID, profit)
 
             return res.status(200).json({
-                message: 'Cable Bill Paid',
+                message: 'Electric Bill Paid',
                 bonusAmount
             });
         } else {
             // Return error response if the data purchase failed
             return res.status(400).json({
-                message: 'Payment Failed'
+                message: response.data.status
             });
         }
     } catch (error) {
