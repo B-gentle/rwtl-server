@@ -22,11 +22,11 @@ const insertPackages = async () => {
 };
 
 // const instantCashBackData = [
-//   { "level": 1, "bonusPercentage": 0.20 },
+//   { "level": 1, "bonusPercentage": 0.25 },
 //   { "level": 2, "bonusPercentage": 0.04 },
 //   { "level": 3, "bonusPercentage": 0.03 },
 //   { "level": 4, "bonusPercentage": 0.02 },
-//   { "level": 5, "bonusPercentage": 0.01 },
+//   { "level": 5, "bonusPercentage": 0.015 },
 //   { "level": 6, "bonusPercentage": 0.01 },
 //   { "level": 7, "bonusPercentage": 0.01 },
 //   { "level": 8, "bonusPercentage": 0.01 },
@@ -35,7 +35,7 @@ const insertPackages = async () => {
 //   ]
   
   
-// Package.updateMany({}, { instantCashBack: 0.20})
+// Package.updateMany({}, { instantCashBack: instantCashBackData})
 //     .then(() => {
 //       console.log('name update successful');
 //     })
