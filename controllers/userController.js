@@ -247,6 +247,7 @@ const loginUser = asyncHandler(async (req, res) => {
     //check if password is correct
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
     if (!passwordIsCorrect) {
+        res.status(400)
         throw new Error("Invalid Password")
     }
 
