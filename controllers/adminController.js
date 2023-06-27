@@ -276,16 +276,16 @@ const currentMinutes = currentDate.getMinutes();
            return res.status(400).json({message:"user not found"})
         }
 
-        req.admin.walletBalance -= amount;
+        req.admin.walletBalance -= Number(amount);
         await req.admin.save();
 
         receiver.walletBalance += Number(amount);
         await receiver.save();
 
         const transaction = new Transaction({
-            user: req.admin._id,
+            user: req.admin.id,
             transactionId,
-            transactionType,
+            transactionType: 'fundTransfer',
             recipient: receiver.fullname,
             amount,
             status: 'successful',
@@ -297,7 +297,7 @@ const currentMinutes = currentDate.getMinutes();
             message: 'User wallet credited successfully'
         });
     } catch (error) {
-       
+       console.log(error)
         res.status(500)
         throw new Error('Failed to credit user wallet')
     }

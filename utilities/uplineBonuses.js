@@ -30,7 +30,7 @@ const calculateUplineBonuses = async (uplineID, packageID, pv) => {
                             upline.monthlyPv +=  0.25 * pv
                             upline.indirectPv += 0.25 * pv
                         }
-                        upline.pv = upline.indirectPv + upline.directPv
+                        upline.pv = upline.indirectPv + upline.directPv + uplinePackage.pv
                         await upline.save();
                     }else{
                         console.log('error here')
