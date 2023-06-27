@@ -366,16 +366,20 @@ const upgradePackage = asyncHandler(async (req, res) => {
     await currentUser.save();
 
     // Update user's package in downline documents
-    await User.updateMany(
-        { 'downlines.userId': currentUser._id },
-        {
-          $set: {
+    await User.updateMany({
+        'downlines.userId': currentUser._id
+    }, {
+        $set: {
             'downlines.$.pv': currentUser.pv,
-            'downlines.$[elem].package': { name: selectedPackageName }
-          }
-        },
-        { arrayFilters: [{ 'elem.userId': currentUser._id }] }
-      );
+            'downlines.$[elem].package': {
+                name: selectedPackageName
+            }
+        }
+    }, {
+        arrayFilters: [{
+            'elem.userId': currentUser._id
+        }]
+    });
 
     try {
         let upline = await User.findById(currentUser.upline.ID);
@@ -627,83 +631,77 @@ const addDownline = asyncHandler(async (req, res) => {
         res.status(400)
         throw new Error("Insufficient Amount, cannot continue registration")
     }
+    //     //create new user
+    const user = new User({
+        email,
+        fullname,
+        username,
+        password,
+        phoneNo,
+        bankName,
+        accountName,
+        accountNo,
+        package: {
+            name: selectedPackage.name,
+            ID: selectedPackage._id,
+        },
+        pv: selectedPackage.pv,
+        paidAmount: selectedPackage.amount,
+        // uplineBonus: uplineBonuses
+    });
 
-    if (currentUser.walletBalance >= selectedPackage.amount) {
-        //     //create new user
-        const user = new User({
-            email,
-            fullname,
-            username,
-            password,
-            phoneNo,
-            bankName,
-            accountName,
-            accountNo,
-            package: {
-                name: selectedPackage.name,
-                ID: selectedPackage._id,
-            },
-            pv: selectedPackage.pv,
-            paidAmount: selectedPackage.amount,
-            // uplineBonus: uplineBonuses
-        });
+    const {
+        _id
+    } = user;
+    const stringId = _id.toString();
 
-        const {
-            _id
-        } = user;
-        const stringId = _id.toString();
+    //     //generate referral code and links
+    user.referralCode = generateReferralCode(stringId, user.username);
+    user.referralLink = generateReferralLink(user.referralCode)
+    user.walletBalance += selectedPackage.amount * selectedPackage.instantCashBack
 
-        //     //generate referral code and links
-        user.referralCode = generateReferralCode(stringId, user.username);
-        user.referralLink = generateReferralLink(user.referralCode)
-        user.walletBalance += selectedPackage.amount * selectedPackage.instantCashBack
+    //     //add upline
+    user.upline = {
+        username: currentUser.username,
+        ID: currentUser._id
+    };
 
-        //     //add upline
-        user.upline = {
-            username: currentUser.username,
-            ID: currentUser._id
-        };
+    //     // add user to upline's downline
+    addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
+    currentUser.walletBalance -= selectedPackage.amount
+    //getting all bonuses to be paid to the upline
+    calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
+    await currentUser.save();
+    const saveUSer = await user.save();
 
-        //     // add user to upline's downline
-        addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
-        currentUser.walletBalance -= selectedPackage.amount
-        //getting all bonuses to be paid to the upline
-        calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
-        await currentUser.save();
-        const saveUSer = await user.save();
-
-        if (saveUSer) {
-            //         // Reset Email
-            const url = 'https://myrechargewise.com/login'
-            const message = `
+    if (saveUSer) {
+        //         // Reset Email
+        const url = 'https://myrechargewise.com/login'
+        const message = `
                 <h2>Hello ${user.fullname}</h2>
                 <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
                 <a href=${url} clicktracking=off>Click here to login</a>
                 <small>Best Regards</small>
             <span>RechargeWise Technologies</span>`;
 
-            const subject = "Registration Successful"
-            const send_to = user.email;
-            const sent_from = process.env.EMAIL_USER;
-            const reply_to = "noreply@RWTL.com";
-            try {
-                await sendEmail(subject, message, send_to, sent_from, reply_to)
-            } catch (error) {
+        const subject = "Registration Successful"
+        const send_to = user.email;
+        const sent_from = process.env.EMAIL_USER;
+        const reply_to = "noreply@RWTL.com";
+        try {
+            await sendEmail(subject, message, send_to, sent_from, reply_to)
+        } catch (error) {
 
-            }
-
-            res.status(201).json({
-                _id,
-                username,
-                message: "User Registered Successfully"
-            });
-        } else {
-            res.status(400)
-            throw new Error("user not created successfully")
         }
+
+        res.status(201).json({
+            _id,
+            username,
+            message: "User Registered Successfully"
+        });
     } else {
         res.status(400)
-        throw new Error("Insufficient Wallet Balance")
+        throw new Error("user not created successfully")
     }
 
 })
