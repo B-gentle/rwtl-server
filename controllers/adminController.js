@@ -10,6 +10,7 @@ const sendEmail = require("../utilities/sendEmail");
 const User = require("../models/userModel");
 const addToDownline = require("../utilities/addToDownline");
 const Transaction = require("../models/transactionModel");
+const calculateUplineBonuses = require("../utilities/uplineBonuses");
 
 // generate Token function
 const generateToken = (id) => {
@@ -216,38 +217,38 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
 
     //update user details
     user.pv = selectedPackage.pv;
-    user.walletBalance = selectedPackage.amount * 0.25;
+    user.walletBalance = selectedPackage.amount * selectedPackage.instantCashBack;
     user.password = user.passkey;
     // add user to upline's downline
     addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, selectedPackage.pv)
     user.passkey = undefined;
-    calculateUplineBonuses(user.upline.ID, selectedPackage._id)
+    calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
     const registered = await user.save();
     if (registered) {
-         // Reset Email
-         const url = 'https://myrechargewise.com/login'
-         const message = `
+        // Reset Email
+        const url = 'https://myrechargewise.com/login'
+        const message = `
          <h2>Hello ${user.fullname}</h2>
          <p>Your Registration on myrechargewise was successful for the ${user.package.name} package. Click on the link below to login to your account. with username: ${user.username} and your password.</p>
          <a href=${url} clicktracking=off>Click here to login</a>
          <small>Best Regards</small>
          <span>RechargeWise Technologies</span>`;
-         
-             const subject = "Registration Successful"
-             const send_to = user.email;
-             const sent_from = process.env.EMAIL_USER;
-             const reply_to = "noreply@RWTL.com";
-         
-             try {
-                 await sendEmail(subject, message, send_to, sent_from, reply_to)
-                 res.status(201).json({
-                     success: true,
-                     message: "User Registration Approved"
-                 })
-             } catch (error) {
-                 res.status(500)
-                 throw new Error("Something went wrong, Please try again!")
-             }
+
+        const subject = "Registration Successful"
+        const send_to = user.email;
+        const sent_from = process.env.EMAIL_USER;
+        const reply_to = "noreply@RWTL.com";
+
+        try {
+            await sendEmail(subject, message, send_to, sent_from, reply_to)
+            res.status(201).json({
+                success: true,
+                message: "User Registration Approved"
+            })
+        } catch (error) {
+            res.status(500)
+            throw new Error("Something went wrong, Please try again!")
+        }
         res.status(201).json({
             message: 'User registration completed'
         });
@@ -261,19 +262,21 @@ const creditUserWallet = asyncHandler(async (req, res) => {
         amount
     } = req.body;
     const currentDate = new Date();
-const currentYear = currentDate.getFullYear();
-const currentMonth = currentDate.getMonth() + 1; // Adding 1 to get a 1-based month
-const currentHour = currentDate.getHours();
-const currentMinutes = currentDate.getMinutes();
-    const transactionId = username +`${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // Adding 1 to get a 1-based month
+    const currentHour = currentDate.getHours();
+    const currentMinutes = currentDate.getMinutes();
+    const transactionId = username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
     const transactionType = 'transfer'
-    
+
     try {
         const receiver = await User.findOne({
             username
         });
         if (!receiver) {
-           return res.status(400).json({message:"user not found"})
+            return res.status(400).json({
+                message: "user not found"
+            })
         }
 
         req.admin.walletBalance -= Number(amount);
@@ -297,7 +300,7 @@ const currentMinutes = currentDate.getMinutes();
             message: 'User wallet credited successfully'
         });
     } catch (error) {
-       console.log(error)
+        console.log(error)
         res.status(500)
         throw new Error('Failed to credit user wallet')
     }

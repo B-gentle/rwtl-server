@@ -13,6 +13,7 @@ const dataRoute = require("./routes/dataRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 // const insertPackages = require("./middleWare/insertPackages")
 const DataPlan = require('./models/dataPlansModel');
+const Incentives = require("./models/incentivesModel");
 // const Package = require("./models/packageModel");
 
 
@@ -54,6 +55,7 @@ mongoose.connect(process.env.MONGO_URI)
 .then(() => {
     app.listen(PORT, () => console.log(`Server running on Port ${PORT}`))
 }).catch((err => console.log(err)));
+
 
 
 

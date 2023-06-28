@@ -340,7 +340,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
 const upgradePackage = asyncHandler(async (req, res) => {
     const {
-        packageId
+        packageId,
     } = req.body;
     const currentUser = await User.findById(req.user.id);
     const currentUserPackage = await Package.findById(currentUser.package.ID);
@@ -362,24 +362,27 @@ const upgradePackage = asyncHandler(async (req, res) => {
     currentUser.withdrawableCommission += currentUserPackage.instantCashBack * packageDifference
     currentUser.directPv += packagePvDifference;
     currentUser.monthlyPv += packagePvDifference;
-    currentUser.pv = currentUser.directPv + currentUser.indirectPv;
+    currentUser.pv = currentUser.directPv + currentUser.indirectPv + currentUserPackage.pv + packagePvDifference;
     await currentUser.save();
 
     // Update user's package in downline documents
-    await User.updateMany({
-        'downlines.userId': currentUser._id
-    }, {
-        $set: {
-            'downlines.$.pv': currentUser.pv,
-            'downlines.$[elem].package': {
-                name: selectedPackageName
+    try {
+        await User.updateMany({
+            'downlines.userId': currentUser._id
+        }, {
+            $set: {
+                'downlines.$[elem].pv': pv,
+                'downlines.$[elem].package.name': selectedPackage.name
             }
-        }
-    }, {
-        arrayFilters: [{
-            'elem.userId': currentUser._id
-        }]
-    });
+        }, {
+            arrayFilters: [{
+                'elem.userId': currentUser._id
+            }]
+        })
+    } catch (error) {
+        console.log(error)
+    }
+   
 
     try {
         let upline = await User.findById(currentUser.upline.ID);
@@ -409,7 +412,8 @@ const upgradePackage = asyncHandler(async (req, res) => {
                         upline.indirectPv += 0.25 * packagePvDifference
                         upline.monthlyPv += 0.25 * packagePvDifference
                     }
-                    upline.pv = upline.indirectPv + upline.directPv
+                    upline.pv = upline.indirectPv + upline.directPv + uplinePackage.pv + packagePvDifference
+                    upline.monthlyPv += packagePvDifference
                     await upline.save();
                 } else {
                     console.log('error here')
@@ -455,7 +459,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
 
 
     res.status(200).json({
-        data: packageDifference
+        data: 'packageDifference'
     })
 
 })
@@ -717,6 +721,8 @@ const deleteUser = asyncHandler(async (req, res) => {
             res.status(400);
             throw new Error('User not found');
         }
+
+        const pvToSubtract = user.pv;
         // Update the upline's downlines
         if (user.upline.ID) {
             const upline = await User.findById(user.upline.ID);

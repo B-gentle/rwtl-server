@@ -1,6 +1,23 @@
 const express = require("express");
-const { registerUser, loginUser, logout, getLoggedInUser, loginStatus, updateUser, changePassword, resetPassword, forgotPassword, checks, addDownline, deleteUser, upgradePackage } = require("../controllers/userController");
-const {protect} = require("../middleWare/authMiddleware");
+const {
+    registerUser,
+    loginUser,
+    logout,
+    getLoggedInUser,
+    loginStatus,
+    updateUser,
+    changePassword,
+    resetPassword,
+    forgotPassword,
+    checks,
+    addDownline,
+    deleteUser,
+    upgradePackage
+} = require("../controllers/userController");
+const {
+    protect
+} = require("../middleWare/authMiddleware");
+const User = require("../models/userModel");
 const router = express.Router();
 
 router.post("/detailsValid", checks);
