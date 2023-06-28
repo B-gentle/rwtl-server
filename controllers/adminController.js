@@ -217,6 +217,7 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
 
     //update user details
     user.pv = selectedPackage.pv;
+    user.monthlyPv = selectedPackage.pv;
     user.walletBalance = selectedPackage.amount * selectedPackage.instantCashBack;
     user.password = user.passkey;
     // add user to upline's downline
