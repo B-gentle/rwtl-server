@@ -220,7 +220,7 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
     user.walletBalance = selectedPackage.amount * selectedPackage.instantCashBack;
     user.password = user.passkey;
     // add user to upline's downline
-    addToDownline(user.username, user.upline.ID, user._id, selectedPackage._id, selectedPackage.name, selectedPackage.pv)
+    addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv )
     user.passkey = undefined;
     calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
     const registered = await user.save();
