@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const sendEmail = require("../utilities/sendEmail");
 const addToDownline = require("../utilities/addToDownline");
 const calculateUplineBonuses = require("../utilities/uplineBonuses");
+const Incentives = require("../models/incentivesModel");
 
 
 
@@ -252,6 +253,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     if (user && passwordIsCorrect) {
+        const date = new Date().getMonth() + 1;
         const {
             _id
         } = user
@@ -722,7 +724,6 @@ const deleteUser = asyncHandler(async (req, res) => {
             throw new Error('User not found');
         }
 
-        const pvToSubtract = user.pv;
         // Update the upline's downlines
         if (user.upline.ID) {
             const upline = await User.findById(user.upline.ID);
@@ -755,6 +756,17 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 })
 
+const getUserIncentives = asyncHandler(async(req, res) => {
+const currentUser = await User.findById(req.user.id);
+const incentives = await Incentives.find();
+const nextIncentive = incentives.find((incentive) => {
+    return incentive.requiredPv > currentUser.pv 
+  });
+
+
+res.status(200).json({data: [nextIncentive]})
+})
+
 module.exports = {
     registerUser,
     loginUser,
@@ -768,5 +780,6 @@ module.exports = {
     checks,
     addDownline,
     deleteUser,
-    upgradePackage
+    upgradePackage,
+    getUserIncentives
 }
