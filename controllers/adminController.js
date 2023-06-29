@@ -239,16 +239,9 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
         const send_to = user.email;
         const sent_from = process.env.EMAIL_USER;
         const reply_to = "noreply@RWTL.com";
-
         try {
-            await sendEmail(subject, message, send_to, sent_from, reply_to)
-            res.status(201).json({
-                success: true,
-                message: "User Registration Approved"
-            })
-        } catch (error) {
-            res.status(500)
-            throw new Error("Something went wrong, Please try again!")
+            await sendEmail(subject, message, send_to, sent_from, reply_to)    
+        } catch (error) {    
         }
         res.status(201).json({
             message: 'User registration completed'
