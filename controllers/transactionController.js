@@ -102,11 +102,9 @@ const transferCommission = asyncHandler(async (req, res) => {
             res.status(400)
             throw new Error("insufficient funds")
         }
-
-        if (currentUser.withdrawableCommission >= amount) {
             currentUser.withdrawableCommission -= amount;
             currentUser.walletBalance += Number(amount);
-        }
+        
 
         await currentUser.save();
 
@@ -191,7 +189,7 @@ const purchaseAirtime = async (req, res) => {
             }
         });
         // Check if the airtime purchase was successful
-        if (response.data.status === 200) {
+        if (response.data.statuscode === 100) {
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
@@ -300,7 +298,7 @@ const purchaseData = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.status === 200) {
+        if (response.data.statuscode === 100) {
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
@@ -397,7 +395,7 @@ const cableBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.status === 'OK') {
+        if (response.data.statuscode === 100) {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
@@ -495,7 +493,7 @@ const electricityBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.status === 200) {
+        if (response.data.statuscode === 100) {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= amount
