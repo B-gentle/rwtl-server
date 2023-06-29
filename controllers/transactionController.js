@@ -84,7 +84,6 @@ const sendMoney = asyncHandler(async (req, res) => {
             message: 'Transfer successful'
         })
     } catch (error) {
-        console.log(error)
         res.status(500)
         throw new Error("Transaction failed")
     }

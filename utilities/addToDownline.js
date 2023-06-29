@@ -31,6 +31,8 @@ const addToDownline = async (username, uplineID, userId,  packageName, userPv) =
                 if (!upline) {
                     break;
                 }
+            }else{
+                upline = null
             }
         }
         
