@@ -249,11 +249,10 @@ const loginUser = asyncHandler(async (req, res) => {
     const passwordIsCorrect = await bcrypt.compare(password, user.password);
     if (!passwordIsCorrect) {
         res.status(400)
-        throw new Error("Invalid Password")
+        throw new Error("Invalid Login Credentials")
     }
 
     if (user && passwordIsCorrect) {
-        const date = new Date().getMonth() + 1;
         const {
             _id
         } = user
@@ -384,7 +383,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
     } catch (error) {
         console.log(error)
     }
-   
+
 
     try {
         let upline = await User.findById(currentUser.upline.ID);
@@ -756,15 +755,17 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 })
 
-const getUserIncentives = asyncHandler(async(req, res) => {
-const currentUser = await User.findById(req.user.id);
-const incentives = await Incentives.find();
-const nextIncentive = incentives.find((incentive) => {
-    return incentive.requiredPv > currentUser.pv 
-  });
+const getUserIncentives = asyncHandler(async (req, res) => {
+    const currentUser = await User.findById(req.user.id);
+    const incentives = await Incentives.find();
+    const nextIncentive = incentives.find((incentive) => {
+        return incentive.requiredPv > currentUser.pv
+    });
 
 
-res.status(200).json({data: [nextIncentive]})
+    res.status(200).json({
+        data: [nextIncentive]
+    })
 })
 
 module.exports = {
