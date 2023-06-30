@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema({
     transactionType: {
         type: String,
         required: true,
-        enum: ['airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade']
+        enum: ['airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade', 'registration']
     },
 
     //export all the enums so as to avoid typos
@@ -87,6 +87,17 @@ const transactionSchema = new mongoose.Schema({
         required: function () {
             return this.type === 'electricity'
         }
+    },
+
+    package: {
+        type: String,
+        required: function () {
+            return this.type === 'registration'
+        }
+    },
+
+    registeredUser:{
+        type: String,
     },
 
     amount: {

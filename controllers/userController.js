@@ -671,17 +671,13 @@ const addDownline = asyncHandler(async (req, res) => {
         ID: currentUser._id
     };
 
-    //     // add user to upline's downline
-    
-    currentUser.walletBalance -= selectedPackage.amount;
-    //getting all bonuses to be paid to the upline
-    await currentUser.save();
     const saveUSer = await user.save();
 
     if (saveUSer) {
+        currentUser.walletBalance -= selectedPackage.amount;
+        await currentUser.save();
         addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
         calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
-        //         // Reset Email
         const url = 'https://myrechargewise.com/login'
         const message = `
                 <h2>Hello ${user.fullname}</h2>
@@ -699,6 +695,26 @@ const addDownline = asyncHandler(async (req, res) => {
         } catch (error) {
 
         }
+
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // Adding 1 to get a 1-based month
+        const currentHour = currentDate.getHours();
+        const currentMinutes = currentDate.getMinutes();
+        const transactionId = req.user.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+
+        // Create a new transaction object
+        const transaction = new Transaction({
+            transactionId,
+            transactionType: 'registration',
+            status: 'successful',
+            package: selectedPackage,
+            registeredUser: user.username,
+            amount: selectedPackage.amount,
+            user: req.user._id
+        });
+
+        await transaction.save();
 
         res.status(201).json({
             _id,

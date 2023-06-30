@@ -221,7 +221,7 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
     user.walletBalance = selectedPackage.amount * selectedPackage.instantCashBack;
     user.password = user.passkey;
     // add user to upline's downline
-    addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv )
+    addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv)
     user.passkey = undefined;
     calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
     const registered = await user.save();
@@ -240,9 +240,8 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
         const sent_from = process.env.EMAIL_USER;
         const reply_to = "noreply@RWTL.com";
         try {
-            await sendEmail(subject, message, send_to, sent_from, reply_to)    
-        } catch (error) {    
-        }
+            await sendEmail(subject, message, send_to, sent_from, reply_to)
+        } catch (error) {}
         res.status(201).json({
             message: 'User registration completed'
         });
@@ -299,17 +298,55 @@ const creditUserWallet = asyncHandler(async (req, res) => {
     }
 });
 
-const viewUserDetails = asyncHandler(async(req, res) => {
-    const {username} = req.body;
-    const user = await User.findOne({username})
+const viewUserDetails = asyncHandler(async (req, res) => {
+    const {
+        username
+    } = req.body;
+    const user = await User.findOne({
+        username
+    })
 
-    if(!user){
+    if (!user) {
         res.status(400)
         throw new Error('User does not exist')
     }
     user.password = undefined
 
-    res.status(200).json({data: user})
+    res.status(200).json({
+        data: user
+    })
+})
+
+const viewUserTransactions = asyncHandler(async (req, res) => {
+    const {
+        username,
+        transactionType
+    } = req.body;
+    const user = await User.findOne({
+        username
+    })
+
+    if (!user) {
+        res.status(400)
+        throw new Error('User does not exist')
+    }
+
+    const transactions = await Transaction.find({
+        $or: [{
+                user: user._id
+            },
+            {
+                recipient: user.username
+            }
+        ]
+    });
+
+
+    if (transactions) {
+        res.status(200).json({
+            data: transactions
+        });
+    }
 })
 
 
@@ -323,5 +360,6 @@ module.exports = {
     getLoggedInAdmin,
     loginStatus,
     getPendingRegisteredUsers,
-    viewUserDetails
+    viewUserDetails,
+    viewUserTransactions
 };

@@ -39,6 +39,8 @@ const calculateUplineBonuses = async (uplineID, packageID, pv) => {
                     if (upline && upline.upline && upline.upline.ID) {
                         upline = await User.findById(upline.upline.ID);
                         userLevel += 1;
+                    }else{
+                        break;
                     }
                 }
             }else{
