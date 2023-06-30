@@ -751,7 +751,7 @@ const deleteUser = asyncHandler(async (req, res) => {
         })
     } catch (error) {
         res.status(400)
-        console.error('Error deleting user:', error.message);
+        throw new Error(error)
     }
 
 })
