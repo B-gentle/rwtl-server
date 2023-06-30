@@ -249,7 +249,6 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
     }
 });
 
-
 const creditUserWallet = asyncHandler(async (req, res) => {
     const {
         username,
@@ -300,6 +299,19 @@ const creditUserWallet = asyncHandler(async (req, res) => {
     }
 });
 
+const viewUserDetails = asyncHandler(async(req, res) => {
+    const {username} = req.body;
+    const user = await User.findOne({username})
+
+    if(!user){
+        res.status(400)
+        throw new Error('User does not exist')
+    }
+    user.password = undefined
+
+    res.status(200).json({data: user})
+})
+
 
 
 module.exports = {
@@ -310,5 +322,6 @@ module.exports = {
     logout,
     getLoggedInAdmin,
     loginStatus,
-    getPendingRegisteredUsers
+    getPendingRegisteredUsers,
+    viewUserDetails
 };

@@ -188,8 +188,9 @@ const purchaseAirtime = async (req, res) => {
                 CallBackURL: 'https;//localhost:5000/'
             }
         });
+        
         // Check if the airtime purchase was successful
-        if (response.data.statuscode === 100) {
+        if (response.data.statuscode === '100') {
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
@@ -298,7 +299,7 @@ const purchaseData = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.statuscode === 100) {
+        if (response.data.statuscode === '100') {
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
             // Add the bonus amount to the user's balance
@@ -395,7 +396,7 @@ const cableBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.statuscode === 100) {
+        if (response.data.statuscode === '100') {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
@@ -493,7 +494,7 @@ const electricityBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.statuscode === 100) {
+        if (response.data.statuscode === '100') {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= amount

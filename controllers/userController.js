@@ -672,14 +672,15 @@ const addDownline = asyncHandler(async (req, res) => {
     };
 
     //     // add user to upline's downline
-    addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
-    currentUser.walletBalance -= selectedPackage.amount
+    
+    currentUser.walletBalance -= selectedPackage.amount;
     //getting all bonuses to be paid to the upline
-    calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
     await currentUser.save();
     const saveUSer = await user.save();
 
     if (saveUSer) {
+        addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
+        calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
         //         // Reset Email
         const url = 'https://myrechargewise.com/login'
         const message = `
