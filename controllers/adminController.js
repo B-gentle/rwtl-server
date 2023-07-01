@@ -27,13 +27,14 @@ const addadmin = asyncHandler(async (req, res) => {
         username,
         email,
         password,
+        role,
         phoneNo,
         pv,
         walletBalance
     } = req.body;
 
     //admin validation
-    if (!fullname || !email || !password) {
+    if (!fullname || !email || !password || !role) {
         res.status(400)
         throw new Error("Please fill in all fields")
     }
@@ -55,6 +56,7 @@ const addadmin = asyncHandler(async (req, res) => {
         fullname,
         username,
         password,
+        role,
         phoneNo,
         pv,
         walletBalance
@@ -259,7 +261,6 @@ const creditUserWallet = asyncHandler(async (req, res) => {
     const currentHour = currentDate.getHours();
     const currentMinutes = currentDate.getMinutes();
     const transactionId = username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
-    const transactionType = 'transfer'
 
     try {
         const receiver = await User.findOne({
@@ -297,9 +298,8 @@ const creditUserWallet = asyncHandler(async (req, res) => {
             message: 'User wallet credited successfully'
         });
     } catch (error) {
-        console.log(error)
         res.status(500)
-        throw new Error('Failed to credit user wallet')
+        throw new Error(error)
     }
 });
 
