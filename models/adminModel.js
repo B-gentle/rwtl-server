@@ -15,6 +15,12 @@ const AdminSchema = mongoose.Schema({
     trim: true
   },
 
+  role: {
+    type: String,
+    required: true,
+    enum: ['super', 'director', 'staff']
+  },
+
   email: {
     type: String,
     required: [true, "please add an email"],
@@ -36,9 +42,9 @@ const AdminSchema = mongoose.Schema({
   },
 
   package: {
-      type: String,
-      ref: "Package",
-      default: "Executive"
+    type: String,
+    ref: "Package",
+    default: "Executive"
   },
 
   walletBalance: {

@@ -281,7 +281,12 @@ const creditUserWallet = asyncHandler(async (req, res) => {
             user: req.admin.id,
             transactionId,
             transactionType: 'fundTransfer',
-            recipient: receiver.fullname,
+            recipient: receiver.username,
+            sender: req.admin.username,
+            senderNewWalletBalance: req.admin.walletBalance,
+            senderPrevWalletBalance: req.admin.walletBalance += Number(amount),
+            receiverNewWalletBalance: receiver.walletBalance,
+            receiverPrevWalletBalance: receiver.walletBalance -= Number(amount),
             amount,
             status: 'successful',
         });
@@ -338,7 +343,8 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
             {
                 recipient: user.username
             }
-        ]
+        ], 
+        transactionType
     });
 
 
@@ -346,6 +352,9 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         res.status(200).json({
             data: transactions
         });
+    }else{
+        res.status(500)
+        throw new Error('Internal server error')
     }
 })
 

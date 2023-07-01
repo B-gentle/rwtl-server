@@ -71,6 +71,7 @@ const sendMoney = asyncHandler(async (req, res) => {
             transactionId,
             transactionType: 'fundTransfer',
             user: req.user.id,
+            sender: req.user.username,
             recipient: receiver.username,
             receiverNewWalletBalance: receiver.walletBalance,
             senderNewWalletBalance: currentUser.walletBalance,

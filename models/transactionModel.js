@@ -49,6 +49,10 @@ const transactionSchema = new mongoose.Schema({
         }
     },
 
+    sender: {
+        type: String
+    },
+
     phoneNumber: {
         type: String,
         required: function () {
