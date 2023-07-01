@@ -23,6 +23,8 @@ const payUplines = async(currentUserUplineId, profit) => {
 
         if (upline && upline.upline && upline.upline.ID) {
             uplineID = upline.upline.ID;
+        }else{
+            break;
         }
     }
 }
