@@ -60,6 +60,11 @@ const sendMoney = asyncHandler(async (req, res) => {
             throw new Error("insufficient funds")
         }
 
+        if(currentUser.username === receiver.username){
+            res.status(400)
+            throw new Error('please  enter a valid username')
+        }
+
         currentUser.walletBalance -= Number(amount);
         receiver.walletBalance += Number(amount);
         await currentUser.save();
@@ -86,7 +91,7 @@ const sendMoney = asyncHandler(async (req, res) => {
         })
     } catch (error) {
         res.status(500)
-        throw new Error("Transaction failed")
+        throw new Error(error)
     }
 })
 
