@@ -1,5 +1,6 @@
 const express = require("express");
 const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions } = require("../controllers/adminController");
+const { getTransactions } = require("../controllers/transactionController");
 const {  changePassword, resetPassword, forgotPassword } = require("../controllers/userController");
 const {adminProtect} = require("../middleWare/authMiddleware");
 const router = express.Router();

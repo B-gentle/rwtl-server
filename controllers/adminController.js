@@ -354,9 +354,10 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         });
     }else{
         res.status(500)
-        throw new Error('Internal server error')
+        throw new Error(error.message)
     }
 })
+
 
 
 
