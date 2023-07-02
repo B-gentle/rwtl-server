@@ -144,6 +144,13 @@ const transactionSchema = new mongoose.Schema({
         }
     },
 
+    senderNewWalletBalance: {
+        type: Number,
+        required: function () {
+            return this.type === 'fundTransfer'
+        }
+    },
+
     receiverPrevWalletBalance: {
         type: Number,
         required: function () {
@@ -152,13 +159,6 @@ const transactionSchema = new mongoose.Schema({
     },
 
     receiverNewWalletBalance: {
-        type: Number,
-        required: function () {
-            return this.type === 'fundTransfer'
-        }
-    },
-
-    senderNewWalletBalance: {
         type: Number,
         required: function () {
             return this.type === 'fundTransfer'

@@ -55,6 +55,16 @@ const sendMoney = asyncHandler(async (req, res) => {
             })
         }
 
+        if(!amount || !username){
+            res.status(400)
+            throw new Error('Please fill in all field')
+        }
+
+        if(amount <= 0) {
+            res.status(400)
+            throw new Error('please enter a valid amount')
+        }
+
         if (currentUser.walletBalance < amount) {
             res.status(400)
             throw new Error("insufficient funds")
@@ -79,8 +89,8 @@ const sendMoney = asyncHandler(async (req, res) => {
             sender: req.user.username,
             recipient: receiver.username,
             receiverNewWalletBalance: receiver.walletBalance,
-            senderNewWalletBalance: currentUser.walletBalance,
             receiverPrevWalletBalance: receiver.walletBalance -= Number(amount),
+            senderNewWalletBalance: currentUser.walletBalance,
             senderPrevWalletBalance: currentUser.walletBalance += Number(amount),
             amount,
             status: 'successful',
@@ -91,7 +101,7 @@ const sendMoney = asyncHandler(async (req, res) => {
         })
     } catch (error) {
         res.status(500)
-        throw new Error(error)
+        throw new Error(error.message)
     }
 })
 
