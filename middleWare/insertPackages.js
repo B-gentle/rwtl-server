@@ -62,16 +62,6 @@ const packages = [
 //     console.error('Error creating incentives:', error);
 //   });
 
-// const insertPackages = async () => {
-//   try {
-//     await Package.updateMany(packages);
-//     console.log('Predefined packages added successfully');
-//     process.exit(0);
-//   } catch (error) {
-//     console.error('Error adding predefined packages', error);
-//     process.exit(1);
-//   }
-// };
 
 // const instantCashBackData = [
 //   { "level": 1, "bonusPercentage": 0.25 },

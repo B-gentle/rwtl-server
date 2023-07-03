@@ -10,6 +10,7 @@ const userRoute = require("./routes/userRoute");
 const adminRoute = require("./routes/adminRoute");
 const transactionRoute = require("./routes/transactionRoutes");
 const dataRoute = require("./routes/dataRoute");
+const queryRoute = require("./routes/queryRoute");
 const errorHandler = require("./middleWare/errorMiddleware");
 // const insertPackages = require("./middleWare/insertPackages")
 // const DataPlan = require('./models/dataPlansModel');
@@ -41,6 +42,7 @@ app.use("/api/users", userRoute);
 app.use("/api/admin", adminRoute)
 app.use("/api/transaction", transactionRoute);
 app.use("/api/data", dataRoute);
+app.use("/api/db", queryRoute);
 
 app.get('/*', function (req, res) {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));

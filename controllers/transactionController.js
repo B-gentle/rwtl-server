@@ -118,7 +118,12 @@ const transferCommission = asyncHandler(async (req, res) => {
             res.status(400)
             throw new Error("insufficient funds")
         }
-            currentUser.withdrawableCommission -= amount;
+
+        if(amount <= 0) {
+            res.status(400)
+            throw new Error('please enter a valid amount')
+        }
+            currentUser.withdrawableCommission -= Number(amount);
             currentUser.walletBalance += Number(amount);
         
 
@@ -410,9 +415,8 @@ const cableBills = async (req, res) => {
                 CallBackURL: 'https://localhost:5000/'
             }
         });
-
         // Check if the data purchase was successful
-        if (response.data.statuscode === '100') {
+        if (response.data.status === 'ORDER_RECEIVED') {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= Number(amount)
@@ -510,7 +514,7 @@ const electricityBills = async (req, res) => {
         });
 
         // Check if the data purchase was successful
-        if (response.data.statuscode === '100') {
+        if (response.data.statuscode === 'ORDER_RECEIVED') {
 
             // Deduct the purchase amount from the user's wallet balance
             currentUser.walletBalance -= amount
