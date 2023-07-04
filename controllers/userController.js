@@ -359,11 +359,11 @@ const upgradePackage = asyncHandler(async (req, res) => {
     currentUser.package.ID = selectedPackage._id;
     currentUser.package.name = selectedPackage.name;
     currentUser.walletBalance -= packageDifference;
+    commission: currentUserPackage.instantCashBack * packageDifference
     currentUser.commissionBalance += currentUserPackage.instantCashBack * packageDifference
     currentUser.withdrawableCommission += currentUserPackage.instantCashBack * packageDifference
-    currentUser.directPv += packagePvDifference;
     currentUser.monthlyPv += packagePvDifference;
-    currentUser.pv = currentUser.directPv + currentUser.indirectPv + currentUserPackage.pv + packagePvDifference;
+    currentUser.pv += packagePvDifference;
     await currentUser.save();
 
     // Update user's package in downline documents
@@ -372,7 +372,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
             'downlines.userId': currentUser._id
         }, {
             $set: {
-                'downlines.$[elem].pv': pv,
+                'downlines.$[elem].pv': currentUser.pv,
                 'downlines.$[elem].package.name': selectedPackage.name
             }
         }, {
@@ -381,7 +381,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
             }]
         })
     } catch (error) {
-        console.log(error)
+
     }
 
 
@@ -403,18 +403,25 @@ const upgradePackage = asyncHandler(async (req, res) => {
                     const referralBonus = packageDifference * bonusPercentage;
                     upline.withdrawableCommission += referralBonus;
                     upline.commissionBalance += referralBonus;
+                    let dpv;
+                    let idpv;
                     if (userLevel === 1) {
                         upline.directPv += packagePvDifference
                         upline.monthlyPv += packagePvDifference
+                        dpv = packagePvDifference
+                        idpv = 0
                     } else if (userLevel >= 2 && userLevel <= 5) {
                         upline.indirectPv += 0.5 * packagePvDifference
                         upline.monthlyPv += 0.5 * packagePvDifference
+                        dpv = 0
+                        idpv = 0.5 * packagePvDifference
                     } else if (userLevel >= 6 && userLevel <= 10) {
                         upline.indirectPv += 0.25 * packagePvDifference
                         upline.monthlyPv += 0.25 * packagePvDifference
+                        idpv = 0.25 * packagePvDifference
+                        dpv = 0
                     }
-                    upline.pv = upline.indirectPv + upline.directPv + uplinePackage.pv + packagePvDifference
-                    upline.monthlyPv += packagePvDifference
+                    upline.pv += idpv + dpv;
                     await upline.save();
                 } else {
                     console.log('error here')
@@ -423,15 +430,18 @@ const upgradePackage = asyncHandler(async (req, res) => {
                 if (upline && upline.upline && upline.upline.ID) {
                     upline = await User.findById(upline.upline.ID);
                     userLevel += 1;
+                }else{
+                    break;
                 }
             }
         } else {
-            console.log('bonus not paid')
+            
         }
 
 
     } catch (error) {
-        console.log(error)
+        res.status(500)
+        throw new Error(error.message)
     }
 
 
@@ -447,7 +457,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
         transactionType: 'upgrade',
         status: 'successful',
         transactionCategory: `upgrade from ${currentUserPackage.name} to ${selectedPackage.name}`,
-        prevCommissionBalance: currentUser.withdrawableCommission - packageDifference,
+        prevCommissionBalance: currentUser.withdrawableCommission - (currentUserPackage.instantCashBack * packageDifference),
         newCommissionBalance: currentUser.withdrawableCommission,
         prevWalletBalance: currentUser.walletBalance + packageDifference,
         newWalletBalance: currentUser.walletBalance,
@@ -617,9 +627,19 @@ const addDownline = asyncHandler(async (req, res) => {
     const userExist = await User.findOne({
         username
     })
+
+    const emailExist = await User.findOne({
+        email
+    })
+
     if (userExist) {
         res.status(404)
         throw new Error("user already exist")
+    }
+
+    if (emailExist) {
+        res.status(404)
+        throw new Error("Email already exist")
     }
 
     //selected package
@@ -708,7 +728,10 @@ const addDownline = asyncHandler(async (req, res) => {
             transactionId,
             transactionType: 'registration',
             status: 'successful',
-            package: selectedPackage,
+            package: {
+                name: selectedPackage.name,
+                id: selectedPackage._id
+            },
             registeredUser: user.username,
             amount: selectedPackage.amount,
             user: req.user._id

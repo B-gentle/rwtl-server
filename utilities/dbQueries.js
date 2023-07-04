@@ -37,8 +37,8 @@ const insertQuery = async (req, res) => {
 
 const findTransactionsWithSameSenderAndRecipient = async (req, res) => {
     try {
-        const transactions = await Transaction.find({
-            sender: 'roygreat'
+        const transactions = await User.find({
+             fullname: /Ogule/ 
             }
 
         );

@@ -133,7 +133,7 @@ const transferCommission = asyncHandler(async (req, res) => {
         const transaction = new Transaction({
             transactionId,
             transactionType: 'commissionTransfer',
-            prevCommissionBalance: currentUser.withdrawableCommission - Number(amount),
+            prevCommissionBalance: currentUser.withdrawableCommission + Number(amount),
             newCommissionBalance: currentUser.withdrawableCommission,
             prevWalletBalance: currentUser.walletBalance - Number(amount),
             newWalletBalance: currentUser.walletBalance,

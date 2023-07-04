@@ -94,13 +94,17 @@ const transactionSchema = new mongoose.Schema({
     },
 
     package: {
-        type: String,
-        required: function () {
-            return this.type === 'registration'
-        }
+        name: {
+            type: String,
+            ref: 'Package'
+        },
+        id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Package"
+        },
     },
 
-    registeredUser:{
+    registeredUser: {
         type: String,
     },
 
@@ -126,7 +130,7 @@ const transactionSchema = new mongoose.Schema({
     prevWalletBalance: {
         type: Number,
         required: function () {
-            return this.type === 'commissionTransfer' 
+            return this.type === 'commissionTransfer'
         }
     },
 
