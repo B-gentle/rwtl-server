@@ -343,7 +343,7 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
             {
                 recipient: user.username
             }
-        ], 
+        ],
         transactionType
     });
 
@@ -352,10 +352,55 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         res.status(200).json({
             data: transactions
         });
-    }else{
+    } else {
         res.status(500)
         throw new Error(error.message)
     }
+})
+
+const editUserPersonalInformation = asyncHandler(async (req, res) => {
+    const {
+        fullname,
+        username,
+        email,
+        commissionBalance,
+        packageName,
+        pv,
+        walletBalance,
+        withdrawableCommission
+    } = req.body
+
+    //find user
+    try {
+        const user = await User.findOne({
+            username
+        })
+
+        if (user) {
+            user.fullname = fullname || user.fullname;
+            user.username = username || user.username
+            user.email = email || user.email;
+            user.commissionBalance = commissionBalance || user.commissionBalance
+            // user.pv = pv || user.pv
+            user.walletBalance = walletBalance || user.walletBalance
+            user.withdrawableCommission = withdrawableCommission || user.withdrawableCommission
+            const updatedUser = await user.save();
+            if (updatedUser) {
+                updatedUser.password = undefined;
+                res.status(200).json(updatedUser)
+            } else {
+                throw new error(error.message)
+            }
+        } else {
+            res.status(404)
+            throw new Error("User not found")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+
+
 })
 
 
@@ -371,5 +416,6 @@ module.exports = {
     loginStatus,
     getPendingRegisteredUsers,
     viewUserDetails,
-    viewUserTransactions
+    viewUserTransactions,
+    editUserPersonalInformation
 };
