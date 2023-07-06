@@ -26,7 +26,7 @@ const insertQuery = async (req, res) => {
     const currentYear = new Date().getFullYear();
 
     try {
-        await CurrentDate.insertOne({Day: 2, Month: 6, Year: currentYear});
+        await CurrentDate.create({Day: 2, Month: 6, Year: currentYear});
         res.status(200).json({message: 'date inserted successfully'})
     } catch (error) {
         console.log(error)

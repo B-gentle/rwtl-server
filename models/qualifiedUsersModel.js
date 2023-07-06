@@ -25,6 +25,6 @@ const qualifiedUsersSchema = new mongoose.Schema({
     
   });
   
-  const QualifiedUsers = mongoose.model('QualifiedUsers', qualifiedUsersSchema);
+  const QualifiedUser = mongoose.model('QualifiedUser', qualifiedUsersSchema);
   
-  module.exports = QualifiedUsers;
+  module.exports = QualifiedUser;

@@ -403,6 +403,119 @@ const editUserPersonalInformation = asyncHandler(async (req, res) => {
 
 })
 
+const editUserBankDetails = asyncHandler(async (req, res) => {
+    const {
+        username,
+        accountName,
+        accountNo,
+        bankName,
+    } = req.body
+
+    //find user
+    try {
+        const user = await User.findOne({
+            username
+        })
+
+        if (user) {
+            user.bankName = bankName || user.bankName;
+            user.accountName = accountName || user.accountName
+            user.accountNo = accountNo || user.accountNo;
+            const updatedUser = await user.save();
+            if (updatedUser) {
+                updatedUser.password = undefined;
+                res.status(200).json(updatedUser)
+            } else {
+                throw new error(error.message)
+            }
+        } else {
+            res.status(404)
+            throw new Error("User not found")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
+
+const changeUserPassword = asyncHandler(async (req, res) => {
+    const {
+        username,
+        password
+    } = req.body;
+    try {
+        const user = await User.findOne({
+            username
+        })
+        if (user) {
+            if (!password) {
+                res.status(400)
+                throw new Error("Please enter password")
+            }
+
+            user.password = password;
+            const updatedPassword = await user.save();
+            if (updatedPassword) {
+                res.status(200).send("password changed successfully")
+            } else {
+                res.status(404)
+                throw new Error("Unable to change password or incorrect old password")
+            }
+
+        } else {
+            res.status(400)
+            throw new Error("User not Found")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+
+})
+
+const accessUserAccount = asyncHandler(async (req, res) => {
+    const {
+        username,
+    } = req.body;
+    try {
+        if (!username) {
+            res.status(404)
+            throw new Error("Enter username and password")
+        }
+
+        //check if user exist
+        const user = await User.findOne({
+            username
+        })
+        if (user) {
+                const {
+                    _id
+                } = user
+                const token = generateToken(_id)
+                //send http-only cookie
+                res.cookie("token", token, {
+                    path: "/",
+                    httpOnly: true,
+                    expires: new Date(Date.now() + 1000 * 86400), //1 day
+                    sameSite: "none",
+                    secure: true
+                })
+                res.status(200).json({
+                    token,
+                    _id
+                })
+        } else {
+            res.status(400);
+            throw new Error("user does not exist")
+        }
+
+    } catch (error) {
+        res.status(500)
+        console.log(error)
+        throw new Error(error.messsage)
+    }
+})
+
 
 
 
@@ -417,5 +530,8 @@ module.exports = {
     getPendingRegisteredUsers,
     viewUserDetails,
     viewUserTransactions,
-    editUserPersonalInformation
+    editUserPersonalInformation,
+    editUserBankDetails,
+    changeUserPassword,
+    accessUserAccount
 };

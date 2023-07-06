@@ -1,8 +1,8 @@
 const express = require("express");
-const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation } = require("../controllers/adminController");
+const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation, editUserBankDetails, changeUserPassword, accessUserAccount } = require("../controllers/adminController");
 const { getTransactions } = require("../controllers/transactionController");
 const {  changePassword, resetPassword, forgotPassword } = require("../controllers/userController");
-const {adminProtect} = require("../middleWare/authMiddleware");
+const {adminProtect, protect} = require("../middleWare/authMiddleware");
 const router = express.Router();
 
 router.post("/addadmin", addadmin);
@@ -18,6 +18,9 @@ router.get("/getpendingregistrations", adminProtect, getPendingRegisteredUsers)
 router.post("/viewuser", adminProtect, viewUserDetails)
 router.post("/viewusertransactions", adminProtect, viewUserTransactions)
 router.post("/edituserpi", adminProtect, editUserPersonalInformation)
+router.post("/edituserbank", adminProtect, editUserBankDetails)
+router.post("/edituserpassword", adminProtect, changeUserPassword)
+router.post("/enteruseraccount", adminProtect, accessUserAccount)
 
 router.patch("/changepassword", adminProtect, changePassword)
 

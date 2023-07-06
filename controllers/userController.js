@@ -11,6 +11,8 @@ const sendEmail = require("../utilities/sendEmail");
 const addToDownline = require("../utilities/addToDownline");
 const calculateUplineBonuses = require("../utilities/uplineBonuses");
 const Incentives = require("../models/incentivesModel");
+const CurrentDate = require("../models/dateModel");
+const QualifiedUser = require("../models/qualifiedUsersModel");
 
 
 
@@ -236,42 +238,119 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new Error("Enter username and password")
     }
 
-    //check if user exist
-    const user = await User.findOne({
-        username
-    })
-    if (!user) {
-        res.status(400);
-        throw new Error("user does not exist")
-    }
-
-    //check if password is correct
-    const passwordIsCorrect = await bcrypt.compare(password, user.password);
-    if (!passwordIsCorrect) {
-        res.status(400)
-        throw new Error("Invalid Login Credentials")
-    }
-
-    if (user && passwordIsCorrect) {
-        const {
-            _id
-        } = user
-        const token = generateToken(_id)
-        //send http-only cookie
-        res.cookie("token", token, {
-            path: "/",
-            httpOnly: true,
-            expires: new Date(Date.now() + 1000 * 86400), //1 day
-            sameSite: "none",
-            secure: true
+    try {
+        //check if user exist
+        const user = await User.findOne({
+            username
         })
-        res.status(200).json({
-            token,
-            _id
-        })
-    } else {
-        res.status(400)
-        throw new Error("Invalid username or password")
+        if (!user) {
+            res.status(400);
+            throw new Error("user does not exist")
+        }
+
+        //check if password is correct
+        const passwordIsCorrect = await bcrypt.compare(password, user.password);
+        if (!passwordIsCorrect) {
+            res.status(400)
+            throw new Error("Invalid Login Credentials")
+        }
+
+        if (user && passwordIsCorrect) {
+            const {
+                _id
+            } = user
+            const token = generateToken(_id)
+            //send http-only cookie
+
+            // check for current date and reset monthly pv
+            const cDay = new Date().getDate();
+            const cMonth = new Date().getMonth() + 1; // January is month 0, so we add 1 to get the correct month number.
+            const currentYear = new Date().getFullYear();
+
+            const dateData = CurrentDate.findOne()
+            const incentives = await Incentives.find({
+                requiredPv: {
+                    $lte: user.pv
+                },
+                incentiveName: {
+                    $ne: 'Leadership Bonus'
+                }
+            })
+
+            for (const incentive of incentives) {
+
+                const existingQualifiedUser = await QualifiedUser.findOne({
+                    user: _id,
+                    incentiveName: incentive.incentiveName
+                });
+
+                if (!existingQualifiedUser) {
+                    const qualifiedUser = new QualifiedUser({
+                        incentiveName: incentive.incentiveName,
+                        user: _id,
+                        username: user.username,
+                        currentMonth: cMonth
+                    })
+
+                    await qualifiedUser.save()
+                }
+            }
+
+            if (cMonth === dateData.Month) {
+                dateData.day = cDay
+                dateData.Year = currentYear
+                await dateData.save();
+            } else {
+
+                // check if user qualified for monthly pv and move user to qualified user
+                if (user.pv >= 10000) {
+                    const existingQualifiedUser = await QualifiedUser.findOne({
+                        user: _id,
+                        incentiveName: "Leadership Bonus"
+                    });
+
+                    if (!existingQualifiedUser) {
+                        const qualifiedUser = new QualifiedUser({
+                            incentiveName: "Leadership Bonus",
+                            user: _id,
+                            username: user.username,
+                            currentMonth: cMonth
+                        })
+
+                        await qualifiedUser.save()
+                    }
+                }
+                // Different month, update user's monthly pv to zero
+                await User.findByIdAndUpdate(_id, {
+                    monthlyPv: 0
+                });
+
+                // Update the Date collection with the current month
+                await CurrentDate.findOneAndUpdate({}, {
+                    Month: cMonth,
+                    Day: cDay,
+                    Year: currentYear
+                });
+            }
+
+            res.cookie("token", token, {
+                path: "/",
+                httpOnly: true,
+                expires: new Date(Date.now() + 1000 * 86400), //1 day
+                sameSite: "none",
+                secure: true
+            })
+            res.status(200).json({
+                token,
+                _id
+            })
+        } else {
+            res.status(400)
+            throw new Error("Invalid username or password")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
     }
 })
 
@@ -430,12 +509,12 @@ const upgradePackage = asyncHandler(async (req, res) => {
                 if (upline && upline.upline && upline.upline.ID) {
                     upline = await User.findById(upline.upline.ID);
                     userLevel += 1;
-                }else{
+                } else {
                     break;
                 }
             }
         } else {
-            
+
         }
 
 
