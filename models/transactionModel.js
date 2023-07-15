@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema({
     transactionType: {
         type: String,
         required: true,
-        enum: ['airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade', 'registration']
+        enum: ['commission', 'airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade', 'registration']
     },
 
     //export all the enums so as to avoid typos
