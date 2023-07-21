@@ -11,6 +11,7 @@ const User = require("../models/userModel");
 const addToDownline = require("../utilities/addToDownline");
 const Transaction = require("../models/transactionModel");
 const calculateUplineBonuses = require("../utilities/uplineBonuses");
+const Notification = require("../models/notificationModel");
 
 // generate Token function
 const generateToken = (id) => {
@@ -516,6 +517,29 @@ const accessUserAccount = asyncHandler(async (req, res) => {
     }
 })
 
+const notifyUsers = asyncHandler(async (req, res) => {
+    const {
+        message,
+    } = req.body;
+    try {
+        if (!message) {
+            res.status(404)
+            throw new Error("Enter message")
+        }
+
+       const notification = new Notification({
+           message
+       })
+
+       await notification.save()
+       res.status(200).json({message: 'Done'})
+
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.messsage)
+    }
+})
+
 
 
 
@@ -533,5 +557,6 @@ module.exports = {
     editUserPersonalInformation,
     editUserBankDetails,
     changeUserPassword,
-    accessUserAccount
+    accessUserAccount,
+    notifyUsers
 };

@@ -887,6 +887,44 @@ const getUserIncentives = asyncHandler(async (req, res) => {
     })
 })
 
+const readNotification = asyncHandler(async (req, res) => {
+    const {id} = req.body
+    try {
+        const currentUser = await User.findById(req.user.id);
+        const incentives = await Incentives.find();
+        const nextIncentive = incentives.find((incentive) => {
+            return incentive.requiredPv > currentUser.pv
+        });
+
+
+        res.status(200).json({
+            data: [nextIncentive]
+        })
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
+
+const getNotification = asyncHandler(async (req, res) => {
+    const {} = req.body
+    try {
+        const currentUser = await User.findById(req.user.id);
+        const incentives = await Incentives.find();
+        const nextIncentive = incentives.find((incentive) => {
+            return incentive.requiredPv > currentUser.pv
+        });
+
+
+        res.status(200).json({
+            data: [nextIncentive]
+        })
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
+
 module.exports = {
     registerUser,
     loginUser,
