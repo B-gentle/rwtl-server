@@ -332,11 +332,6 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         username
     })
 
-    if (!user) {
-        res.status(400)
-        throw new Error('User does not exist')
-    }
-
     const transactions = await Transaction.find({
         $or: [{
                 user: user._id
