@@ -328,19 +328,23 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         username,
         transactionType
     } = req.body;
+
+    try {
+        
     const user = await User.findOne({
         username
     })
 
     const transactions = await Transaction.find({
         $or: [{
-                user: user._id
+                user: username ? user._id : null
             },
             {
-                recipient: user.username
-            }
+                recipient: username ? user.username : null
+            },
         ],
         transactionType
+        
     });
 
 
@@ -352,6 +356,10 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         res.status(500)
         throw new Error(error.message)
     }
+} catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+}
 })
 
 const editUserPersonalInformation = asyncHandler(async (req, res) => {
