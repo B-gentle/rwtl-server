@@ -13,7 +13,8 @@ const {
     addDownline,
     deleteUser,
     upgradePackage,
-    getUserIncentives
+    getUserIncentives,
+    getNotification
 } = require("../controllers/userController");
 const {
     protect
@@ -35,6 +36,7 @@ router.patch("/upgradepackage", protect, upgradePackage)
 router.patch("/changepassword", protect, changePassword)
 router.post("/deleteuser", deleteUser)
 router.get("/getuserincentive", protect, getUserIncentives)
+router.get("/get-notifications", protect, getNotification)
 
 
 module.exports = router;

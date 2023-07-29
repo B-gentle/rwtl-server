@@ -13,6 +13,7 @@ const calculateUplineBonuses = require("../utilities/uplineBonuses");
 const Incentives = require("../models/incentivesModel");
 const CurrentDate = require("../models/dateModel");
 const QualifiedUser = require("../models/qualifiedUsersModel");
+const Notification = require("../models/notificationModel");
 
 
 
@@ -907,18 +908,21 @@ const readNotification = asyncHandler(async (req, res) => {
 })
 
 const getNotification = asyncHandler(async (req, res) => {
-    const {} = req.body
+    
     try {
-        const currentUser = await User.findById(req.user.id);
-        const incentives = await Incentives.find();
-        const nextIncentive = incentives.find((incentive) => {
-            return incentive.requiredPv > currentUser.pv
-        });
+       const notifications = await Notification.find();
+        res.status(200).json(notifications)
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
 
-
-        res.status(200).json({
-            data: [nextIncentive]
-        })
+const readByNotification = asyncHandler(async (req, res) => {
+    const {id} = req.body;
+    try {
+       const notifications = await Notification.findById(id);
+        res.status(200).json(notifications)
     } catch (error) {
         res.status(500)
         throw new Error(error.message)
@@ -939,5 +943,6 @@ module.exports = {
     addDownline,
     deleteUser,
     upgradePackage,
-    getUserIncentives
+    getUserIncentives,
+    getNotification
 }
