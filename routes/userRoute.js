@@ -14,7 +14,8 @@ const {
     deleteUser,
     upgradePackage,
     getUserIncentives,
-    getNotification
+    getNotification,
+    getUserFullName
 } = require("../controllers/userController");
 const {
     protect
@@ -27,6 +28,7 @@ router.post("/register", registerUser);
 router.post("/adddownline", protect, addDownline);
 router.post("/login", loginUser);
 router.post("/forgotpassword", forgotPassword)
+router.post("/get-full-name", protect, getUserFullName)
 router.put("/resetpassword/:restToken", resetPassword)
 router.get("/logout", logout)
 router.get("/loginstatus", loginStatus)

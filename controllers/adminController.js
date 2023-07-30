@@ -330,36 +330,36 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
     } = req.body;
 
     try {
-        
-    const user = await User.findOne({
-        username
-    })
 
-    const transactions = await Transaction.find({
-        $or: [{
-                user: username ? user._id : null
-            },
-            {
-                recipient: username ? user.username : null
-            },
-        ],
-        transactionType
-        
-    });
+        const user = await User.findOne({
+            username
+        })
 
+        const transactions = await Transaction.find({
+            $or: [{
+                    user: username ? user._id : null
+                },
+                {
+                    recipient: username ? user.username : null
+                },
+            ],
+            transactionType
 
-    if (transactions) {
-        res.status(200).json({
-            data: transactions
         });
-    } else {
+
+
+        if (transactions) {
+            res.status(200).json({
+                data: transactions
+            });
+        } else {
+            res.status(500)
+            throw new Error(error.message)
+        }
+    } catch (error) {
         res.status(500)
         throw new Error(error.message)
     }
-} catch (error) {
-        res.status(500)
-        throw new Error(error.message)
-}
 })
 
 const editUserPersonalInformation = asyncHandler(async (req, res) => {
@@ -492,22 +492,22 @@ const accessUserAccount = asyncHandler(async (req, res) => {
             username
         })
         if (user) {
-                const {
-                    _id
-                } = user
-                const token = generateToken(_id)
-                //send http-only cookie
-                res.cookie("token", token, {
-                    path: "/",
-                    httpOnly: true,
-                    expires: new Date(Date.now() + 1000 * 86400), //1 day
-                    sameSite: "none",
-                    secure: true
-                })
-                res.status(200).json({
-                    token,
-                    _id
-                })
+            const {
+                _id
+            } = user
+            const token = generateToken(_id)
+            //send http-only cookie
+            res.cookie("token", token, {
+                path: "/",
+                httpOnly: true,
+                expires: new Date(Date.now() + 1000 * 86400), //1 day
+                sameSite: "none",
+                secure: true
+            })
+            res.status(200).json({
+                token,
+                _id
+            })
         } else {
             res.status(400);
             throw new Error("user does not exist")
@@ -530,18 +530,77 @@ const notifyUsers = asyncHandler(async (req, res) => {
             throw new Error("Enter message")
         }
 
-       const notification = new Notification({
-           message
-       })
+        const notification = new Notification({
+            message
+        })
 
-       await notification.save()
-       res.status(200).json({message: 'Done'})
+        await notification.save()
+        res.status(200).json({
+            message: 'Done'
+        })
 
     } catch (error) {
         res.status(500)
         throw new Error(error.messsage)
     }
 })
+
+const editUsername = asyncHandler(async (req, res) => {
+    const {
+        username,
+        newUsername,
+    } = req.body
+
+    //find user
+    try {
+        const user = await User.findOne({
+            username
+        })
+
+        if (user) {
+            // Fetch the user's upline (if any)
+            if(user.username === newUsername){
+                res.status(404)
+                throw new Error('username cannot be same')
+            }
+            const upline = user.upline.ID ? await User.findById(user.upline.ID) : null;
+            user.username = newUsername || user.username
+            const updatedUser = await user.save();
+            if (updatedUser) {
+                updatedUser.password = undefined;
+                res.status(200).json(updatedUser)
+            } else {
+                throw new error(error.message)
+            }
+
+            // Update downlines' usernames in the upline's document
+            if (upline) {
+                upline.downlines.forEach((downline) => {
+                    if (downline.userId.toString() === updatedUser._id.toString()) {
+                        downline.username = updatedUser.username;
+                    }
+                });
+                await upline.save();
+                await User.updateMany(
+                    { 'upline.ID': updatedUser._id.toString() },
+                    { $set: { 'upline.username': updatedUser.username } }
+                  );
+            } 
+
+
+        } else {
+            res.status(404)
+            throw new Error("User not found")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+
+
+})
+
+
 
 
 
@@ -561,5 +620,6 @@ module.exports = {
     editUserBankDetails,
     changeUserPassword,
     accessUserAccount,
-    notifyUsers
+    notifyUsers,
+    editUsername
 };

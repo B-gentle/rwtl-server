@@ -1,13 +1,15 @@
 const express = require("express");
-const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation, editUserBankDetails, changeUserPassword, accessUserAccount, notifyUsers } = require("../controllers/adminController");
+const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation, editUserBankDetails, changeUserPassword, accessUserAccount, notifyUsers, editUsername } = require("../controllers/adminController");
 const { getTransactions } = require("../controllers/transactionController");
-const {  changePassword, resetPassword, forgotPassword } = require("../controllers/userController");
+const {  changePassword, resetPassword, forgotPassword, getUserFullName } = require("../controllers/userController");
 const {adminProtect, protect} = require("../middleWare/authMiddleware");
 const router = express.Router();
 
 router.post("/addadmin", addadmin);
 router.patch("/credit", adminProtect, creditUserWallet);
 router.post("/login", loginAdmin);
+router.post("/get-full-name", adminProtect, getUserFullName)
+router.post("/edit-user-username", adminProtect, editUsername)
 router.patch("/completeRegistration", adminProtect, completeUserRegistration)
 router.post("/forgotpassword", forgotPassword)
 router.put("/resetpassword/:restToken", resetPassword)

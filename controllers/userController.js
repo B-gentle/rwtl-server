@@ -118,6 +118,22 @@ const checks = asyncHandler(async (req, res) => {
     })
 })
 
+const getUserFullName = asyncHandler(async (req, res) => {
+    const {
+        username,
+        email,
+    } = req.body
+
+    const user = await User.findOne({ $or: [{ username }, { email }] });
+
+    if (!user) {
+        res.status(404)
+        throw new Error("user not Found")
+    }
+   
+    res.status(200).json(user.fullname)
+})
+
 const registerUser = asyncHandler(async (req, res) => {
     const {
         fullname,
@@ -930,6 +946,7 @@ const readByNotification = asyncHandler(async (req, res) => {
 })
 
 module.exports = {
+    getUserFullName,
     registerUser,
     loginUser,
     logout,
