@@ -12,6 +12,7 @@ const addToDownline = require("../utilities/addToDownline");
 const Transaction = require("../models/transactionModel");
 const calculateUplineBonuses = require("../utilities/uplineBonuses");
 const Notification = require("../models/notificationModel");
+const QualifiedUser = require("../models/qualifiedUsersModel");
 
 // generate Token function
 const generateToken = (id) => {
@@ -325,33 +326,68 @@ const viewUserDetails = asyncHandler(async (req, res) => {
 
 const viewUserTransactions = asyncHandler(async (req, res) => {
     const {
+        option,
         username,
-        transactionType
+        transactionType,
+        from,
+        to
     } = req.body;
 
     try {
 
+        let query = {}
         const user = await User.findOne({
             username
         })
-
-        const transactions = await Transaction.find({
-            $or: [{
-                    user: username ? user._id : null
+        
+        if (option === 'username') {
+            query = {
+                $or: [{
+                    sender: username
+                }, {
+                    receiver: username
                 },
-                {
-                    recipient: username ? user.username : null
-                },
-            ],
-            transactionType
+            {
+                user: user.id
+            }]
+            }
+        } else if (option === 'transactionType') {
+            query = {
+                transactionType: transactionType
+            }
+        } else if (option === 'createdAt') {
+            query = {
+                $or: [
+                    { createdAt: { $gte: new Date(from) } },
+                    { createdAt: { $lte: new Date(to) } }
+                  ]
+            }
+        }
 
-        });
-
+        const transactions = await Transaction.find(query).sort({ createdAt: -1 }).populate('user', 'username').exec();
 
         if (transactions) {
             res.status(200).json({
                 data: transactions
             });
+        } else {
+            res.status(500)
+            throw new Error(error.message)
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
+
+const viewQualifiedUsers = asyncHandler(async (req, res) => {
+   
+    try {
+
+        const qualifiedUsers = await QualifiedUser.find().sort({ createdAt: -1 }).populate('user', 'username').exec();
+
+        if (qualifiedUsers) {
+            res.status(200).json(qualifiedUsers);
         } else {
             res.status(500)
             throw new Error(error.message)
@@ -557,11 +593,20 @@ const editUsername = asyncHandler(async (req, res) => {
             username
         })
 
+        const newUserExist = await User.findOne({
+            username: newUsername
+        })
+
         if (user) {
             // Fetch the user's upline (if any)
-            if(user.username === newUsername){
+            if (user.username === newUsername) {
                 res.status(404)
                 throw new Error('username cannot be same')
+            }
+
+            if (newUserExist) {
+                res.status(404)
+                throw new Error('Username already exist')
             }
             const upline = user.upline.ID ? await User.findById(user.upline.ID) : null;
             user.username = newUsername || user.username
@@ -581,11 +626,14 @@ const editUsername = asyncHandler(async (req, res) => {
                     }
                 });
                 await upline.save();
-                await User.updateMany(
-                    { 'upline.ID': updatedUser._id.toString() },
-                    { $set: { 'upline.username': updatedUser.username } }
-                  );
-            } 
+                await User.updateMany({
+                    'upline.ID': updatedUser._id.toString()
+                }, {
+                    $set: {
+                        'upline.username': updatedUser.username
+                    }
+                });
+            }
 
 
         } else {
@@ -616,6 +664,7 @@ module.exports = {
     getPendingRegisteredUsers,
     viewUserDetails,
     viewUserTransactions,
+    viewQualifiedUsers,
     editUserPersonalInformation,
     editUserBankDetails,
     changeUserPassword,
