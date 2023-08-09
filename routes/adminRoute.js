@@ -1,7 +1,7 @@
 const express = require("express");
-const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation, editUserBankDetails, changeUserPassword, accessUserAccount, notifyUsers, editUsername, viewQualifiedUsers } = require("../controllers/adminController");
+const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation, editUserBankDetails, changeUserPassword, accessUserAccount, notifyUsers, editUsername, viewQualifiedUsers, changePassword } = require("../controllers/adminController");
 const { getTransactions } = require("../controllers/transactionController");
-const {  changePassword, resetPassword, forgotPassword, getUserFullName } = require("../controllers/userController");
+const { resetPassword, forgotPassword, getUserFullName } = require("../controllers/userController");
 const {adminProtect, protect} = require("../middleWare/authMiddleware");
 const router = express.Router();
 

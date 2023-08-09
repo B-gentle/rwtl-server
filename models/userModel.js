@@ -159,6 +159,18 @@ const userSchema = mongoose.Schema({
   walletBalance:{
     type: Number,
     default: 0.00
+  },
+
+  transactionPin:{
+    type: Number,
+  },
+
+  staticAccount:{
+    type: String,
+  },
+
+  staticAccountName:{
+    type: String
   }
 
 }, {

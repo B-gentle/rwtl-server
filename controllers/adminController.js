@@ -330,7 +330,8 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
         username,
         transactionType,
         from,
-        to
+        to,
+        period
     } = req.body;
 
     try {
@@ -352,15 +353,25 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
             }]
             }
         } else if (option === 'transactionType') {
+
+            const selectedDate = new Date(period);
+            const nextDay = new Date(period);
+            nextDay.setDate(nextDay.getDate() + 1);
+
             query = {
-                transactionType: transactionType
+                transactionType: transactionType,
+                createdAt: {
+                    $gte: selectedDate,
+                    $lte: nextDay
+                  }
             }
         } else if (option === 'createdAt') {
             query = {
-                $or: [
-                    { createdAt: { $gte: new Date(from) } },
-                    { createdAt: { $lte: new Date(to) } }
-                  ]
+               createdAt: {
+                 $gte: new Date(from),
+                 $lte: new Date(to) 
+               }
+                     
             }
         }
 
@@ -648,6 +659,42 @@ const editUsername = asyncHandler(async (req, res) => {
 
 })
 
+const changePassword = asyncHandler(async (req, res) => {
+    const user = await Admin.findById(req.admin._id)
+    if (!user) {
+        res.status(400)
+        throw new Error("Admin not Found")
+    }
+    try {
+    const {
+        oldPassword,
+        password
+    } = req.body;
+    if (!oldPassword || !password) {
+        res.status(400)
+        throw new Error("Please fill in old and new password")
+    }
+
+    // check if old password matches the user's password in DB
+    const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password)
+
+    if (user && passwordIsCorrect) {
+        user.password = password;
+        const updatedPassword = await user.save();
+        if (updatedPassword) {
+            res.status(200).send("password changed successfully")
+        } else {
+            res.status(404)
+            throw new Error("Unable to change password or incorrect old password")
+        }
+    }
+} catch (error) {
+        res.status(400)
+        throw new Error(error.message)
+}
+
+})
+
 
 
 
@@ -670,5 +717,6 @@ module.exports = {
     changeUserPassword,
     accessUserAccount,
     notifyUsers,
-    editUsername
+    editUsername,
+    changePassword
 };

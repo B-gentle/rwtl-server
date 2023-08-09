@@ -15,7 +15,8 @@ const {
     upgradePackage,
     getUserIncentives,
     getNotification,
-    getUserFullName
+    getUserFullName,
+    generateStaticAccount
 } = require("../controllers/userController");
 const {
     protect
@@ -29,6 +30,7 @@ router.post("/adddownline", protect, addDownline);
 router.post("/login", loginUser);
 router.post("/forgotpassword", forgotPassword)
 router.post("/get-full-name", protect, getUserFullName)
+router.post("/generate-static-account", protect, generateStaticAccount)
 router.put("/resetpassword/:restToken", resetPassword)
 router.get("/logout", logout)
 router.get("/loginstatus", loginStatus)

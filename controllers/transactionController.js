@@ -24,7 +24,7 @@ const getTransactions = async (req, res) => {
                     recipient: req.user.username
                 }
             ]
-        });
+        }).sort({createdAt: -1});
 
 
         if (transactions) {

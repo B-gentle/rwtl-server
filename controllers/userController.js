@@ -14,6 +14,7 @@ const Incentives = require("../models/incentivesModel");
 const CurrentDate = require("../models/dateModel");
 const QualifiedUser = require("../models/qualifiedUsersModel");
 const Notification = require("../models/notificationModel");
+const axios = require('axios');
 
 
 
@@ -124,13 +125,19 @@ const getUserFullName = asyncHandler(async (req, res) => {
         email,
     } = req.body
 
-    const user = await User.findOne({ $or: [{ username }, { email }] });
+    const user = await User.findOne({
+        $or: [{
+            username
+        }, {
+            email
+        }]
+    });
 
     if (!user) {
         res.status(404)
         throw new Error("user not Found")
     }
-   
+
     res.status(200).json(user.fullname)
 })
 
@@ -905,7 +912,9 @@ const getUserIncentives = asyncHandler(async (req, res) => {
 })
 
 const readNotification = asyncHandler(async (req, res) => {
-    const {id} = req.body
+    const {
+        id
+    } = req.body
     try {
         const currentUser = await User.findById(req.user.id);
         const incentives = await Incentives.find();
@@ -924,9 +933,9 @@ const readNotification = asyncHandler(async (req, res) => {
 })
 
 const getNotification = asyncHandler(async (req, res) => {
-    
+
     try {
-       const notifications = await Notification.find();
+        const notifications = await Notification.find();
         res.status(200).json(notifications)
     } catch (error) {
         res.status(500)
@@ -935,12 +944,50 @@ const getNotification = asyncHandler(async (req, res) => {
 })
 
 const readByNotification = asyncHandler(async (req, res) => {
-    const {id} = req.body;
+    const {
+        id
+    } = req.body;
     try {
-       const notifications = await Notification.findById(id);
+        const notifications = await Notification.findById(id);
         res.status(200).json(notifications)
     } catch (error) {
         res.status(500)
+        throw new Error(error.message)
+    }
+})
+
+const generateStaticAccount = asyncHandler(async (req, res) => {
+
+    const url = 'http://154.113.16.142:8088/appdevapi/api/PiPCreateDynamicAccountNumber';
+    const user = await User.findById(req.user.id);
+    const username = user.username
+    const data = {
+        account_name: username
+    };
+    const headers = {
+        'Content-Type': 'application/json',
+        'X-Auth-Signature': 'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CDF2963FE314DFC89635CFA37A40596508DD6EAAB09402C7',
+        'Client-Id': 'dGVzdF9Qcm92aWR1cw=='
+    };
+
+    try {
+        const response = await axios.post(url, data, {
+            headers
+        });
+        if (response.data.requestSuccessful === true) {
+            user.staticAccount = response.data.account_number
+            user.staticAccountName = response.data.account_name
+            const st = await user.save()
+
+            res.status(200).json('done')
+            // Handle the response data here
+        } else {
+            res.status(400)
+            throw new Error('e no work')
+        }
+    } catch (error) {
+        console.error(error.message);
+        res.status(404)
         throw new Error(error.message)
     }
 })
@@ -961,5 +1008,6 @@ module.exports = {
     deleteUser,
     upgradePackage,
     getUserIncentives,
-    getNotification
+    getNotification,
+    generateStaticAccount
 }
