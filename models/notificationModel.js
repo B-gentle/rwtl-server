@@ -1,9 +1,14 @@
 const mongoose = require("mongoose");
 
 const NotificationSchema = mongoose.Schema({
+  title: {
+    type: String,
+    default: 'New Notification'
+  },
+
   message: {
     type: String,
-    required: [true, "Please Add A Name"],
+    required: [true, "Please Add A Message"],
   },
 
   status: {

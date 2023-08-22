@@ -19,7 +19,7 @@ const getDataPlan = async (req, res) => {
         })
     } catch (error) {
         res.status(400)
-        throw new Error(error)
+        throw new Error(error.message)
     }
 }
 

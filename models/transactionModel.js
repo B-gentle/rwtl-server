@@ -16,7 +16,7 @@ const transactionSchema = new mongoose.Schema({
     transactionType: {
         type: String,
         required: true,
-        enum: ['commission', 'airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade', 'registration']
+        enum: ['commission', 'airtime', 'data', 'cableTv', 'exams', 'electricity', 'commissionTransfer', 'fundTransfer', 'upgrade', 'registration', 'walletFunding']
     },
 
     //export all the enums so as to avoid typos
@@ -130,14 +130,14 @@ const transactionSchema = new mongoose.Schema({
     prevWalletBalance: {
         type: Number,
         required: function () {
-            return this.type === 'commissionTransfer'
+            return this.type === 'commissionTransfer' || this.type === 'walletFunding'
         }
     },
 
     newWalletBalance: {
         type: Number,
         required: function () {
-            return this.type === 'commissionTransfer'
+            return this.type === 'commissionTransfer' || this.type === 'walletFunding'
         }
     },
 

@@ -4,7 +4,10 @@ const axios = require('axios');
 const User = require("../models/userModel");
 const Package = require('../models/packageModel');
 const DataPlan = require("../models/dataPlansModel");
-const {payUplines, payUtilityUplines} = require("../utilities/transactionPayUpline");
+const {
+    payUplines,
+    payUtilityUplines
+} = require("../utilities/transactionPayUpline");
 
 const currentDate = new Date();
 const currentYear = currentDate.getFullYear();
@@ -24,7 +27,9 @@ const getTransactions = async (req, res) => {
                     recipient: req.user.username
                 }
             ]
-        }).sort({createdAt: -1});
+        }).sort({
+            createdAt: -1
+        });
 
 
         if (transactions) {
@@ -102,6 +107,91 @@ const sendMoney = asyncHandler(async (req, res) => {
         await transaction.save()
         return res.status(200).json({
             message: 'Transfer successful'
+        })
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
+
+const fundWallet = asyncHandler(async (req, res) => {
+
+    res.header('Content-Type', 'application/json');
+    res.header('x-auth-signature', 'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CD');
+
+    const {
+        sessionId,
+        accountNumber,
+        transactionAmount,
+        tranRemarks,
+        settledAmount,
+        feeAmount,
+        vatAmount,
+        currency,
+        settlementId,
+        sourceAccountNumber,
+        sourceAccountName,
+        sourceBankName,
+        channelId,
+        tranDateTime,
+        data
+    } = req.body
+
+    try {
+        const expectedSignature = 'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CDF2963FE314DFC89635CFA37A40596508DD6EAAB09402C7';
+        const receivedSignature = req.headers['x-auth-signature'];
+
+        if (!receivedSignature || receivedSignature !== expectedSignature) {
+            res.status(401)
+            throw new Error('rejected response')
+        }
+
+        if (!sessionId || !accountNumber || !transactionAmount || !tranRemarks || !settledAmount || !feeAmount || !vatAmount || !currency || !settlementId || !sourceAccountNumber || !sourceAccountName || !sourceBankName || !channelId || !tranDateTime) {
+            res.status(404)
+            throw new Error('Please fill in all field')
+        }
+
+        // if (!data) {
+        //     res.status(404)
+        //     throw new Error('Please fill in all field')
+        // }
+
+        if (transactionAmount <= 0) {
+            res.status(400)
+            throw new Error('please enter a valid amount')
+        }
+
+        const currentUser = await User.findOne({
+            staticAccount: accountNumber
+        })
+
+        const transactionExist = await Transaction.findOne({transactionId : settlementId})
+
+        if(!currentUser){
+            res.status(404)
+            throw new Error('Static Account Does not exist')
+        }
+
+        if(transactionExist){
+            res.status(404)
+            throw new Error('Duplicate Transaction')
+        }
+
+        currentUser.walletBalance += Number(settledAmount);
+        await currentUser.save();
+
+        const transaction = new Transaction({
+            transactionId: settlementId,
+            transactionType: 'walletFunding',
+            user: currentUser._id,
+            newWalletBalance: currentUser.walletBalance,
+            prevWalletBalance: currentUser.walletBalance -= Number(settledAmount),
+            amount: settledAmount,
+            status: 'successful',
+        })
+        await transaction.save()
+        return res.status(200).json({
+            message: 'Wallet Funded Successfully'
         })
     } catch (error) {
         res.status(500)
@@ -593,6 +683,7 @@ const electricityBills = async (req, res) => {
 module.exports = {
     purchaseAirtime,
     sendMoney,
+    fundWallet,
     getTransactions,
     purchaseData,
     cableBills,

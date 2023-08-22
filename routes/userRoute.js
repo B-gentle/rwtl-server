@@ -1,4 +1,5 @@
 const express = require("express");
+const { fundWallet } = require("../controllers/transactionController");
 const {
     registerUser,
     loginUser,
@@ -31,6 +32,7 @@ router.post("/login", loginUser);
 router.post("/forgotpassword", forgotPassword)
 router.post("/get-full-name", protect, getUserFullName)
 router.post("/generate-static-account", protect, generateStaticAccount)
+router.post("/fund-wallet", fundWallet)
 router.put("/resetpassword/:restToken", resetPassword)
 router.get("/logout", logout)
 router.get("/loginstatus", loginStatus)
