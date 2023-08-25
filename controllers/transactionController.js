@@ -177,7 +177,7 @@ const fundWallet = asyncHandler(async (req, res) => {
         })
 
         if (!currentUser) {
-           return res.status(404).json({
+           return res.status(200).json({
                 requestSuccessful: true,
                 sessionId,
                 responseMessage: "rejected transaction",
@@ -193,7 +193,7 @@ const fundWallet = asyncHandler(async (req, res) => {
                 responseCode: "01"
 
             };
-           return res.status(208).json(response)
+           return res.status(200).json(response)
         }
 
         currentUser.walletBalance += Number(settledAmount);
