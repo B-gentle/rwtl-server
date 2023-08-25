@@ -146,8 +146,12 @@ const fundWallet = asyncHandler(async (req, res) => {
         }
 
         if (!sessionId || !accountNumber || !transactionAmount || !tranRemarks || !settledAmount || !feeAmount || !vatAmount || !currency || !settlementId || !sourceAccountNumber || !sourceAccountName || !sourceBankName || !channelId || !tranDateTime) {
-            res.status(404)
-            throw new Error('Please fill in all field')
+            return res.status(404).json({
+                requestSuccessful: true,
+                sessionId,
+                responseMessage: "rejected transaction",
+                responseCode: "02"
+            })
         }
 
         // if (!data) {
