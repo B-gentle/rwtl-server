@@ -117,7 +117,7 @@ const sendMoney = asyncHandler(async (req, res) => {
 const fundWallet = asyncHandler(async (req, res) => {
 
     res.header('Content-Type', 'application/json');
-    res.header('x-auth-signature', 'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CD');
+    res.header('x-auth-signature', process.env.X_AUTH_SIGNATURE);
 
     const {
         sessionId,
@@ -137,14 +137,14 @@ const fundWallet = asyncHandler(async (req, res) => {
     } = req.body
 
     try {
-        const expectedSignature = process.env.x_AUTH_SIGNATURE;
+        const expectedSignature = process.env.X_AUTH_SIGNATURE;
         const receivedSignature = req.headers['x-auth-signature'];
 
-        if (!receivedSignature || receivedSignature.toLowerCase() !== expectedSignature) {
+        if (!receivedSignature || receivedSignature.toLowerCase() !== expectedSignature.toLowerCase()) {
             return res.status(404).json({
                 requestSuccessful: true,
                 sessionId,
-                responseMessage: "rejected transaction",
+                responseMessage: "rejected transaction1",
                 responseCode: "02"
             })
         }
@@ -153,7 +153,7 @@ const fundWallet = asyncHandler(async (req, res) => {
             return res.status(404).json({
                 requestSuccessful: true,
                 sessionId,
-                responseMessage: "rejected transaction",
+                responseMessage: "rejected transaction2",
                 responseCode: "02"
             })
         }
@@ -180,7 +180,7 @@ const fundWallet = asyncHandler(async (req, res) => {
            return res.status(404).json({
                 requestSuccessful: true,
                 sessionId,
-                responseMessage: "rejected transaction",
+                responseMessage: "rejected transaction3",
                 responseCode: "02"
             })
         }
