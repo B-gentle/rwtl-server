@@ -134,7 +134,6 @@ const fundWallet = asyncHandler(async (req, res) => {
         sourceBankName,
         channelId,
         tranDateTime,
-        data
     } = req.body
 
     try {
@@ -165,16 +164,28 @@ const fundWallet = asyncHandler(async (req, res) => {
             staticAccount: accountNumber
         })
 
-        const transactionExist = await Transaction.findOne({transactionId : settlementId})
+        const transactionExist = await Transaction.findOne({
+            transactionId: settlementId
+        })
 
-        if(!currentUser){
-            res.status(404)
-            throw new Error('Static Account Does not exist')
+        if (!currentUser) {
+           return res.status(404).json({
+                requestSuccessful: true,
+                sessionId,
+                responseMessage: "rejected transaction",
+                responseCode: "02"
+            })
         }
 
-        if(transactionExist){
-            res.status(404)
-            throw new Error('Duplicate Transaction')
+        if (transactionExist) {
+            const response = {
+                requestSuccessful: true,
+                sessionId,
+                responseMessage: "duplicate transaction",
+                responseCode: "01"
+
+            };
+           return res.status(208).json(response)
         }
 
         currentUser.walletBalance += Number(settledAmount);
@@ -191,7 +202,12 @@ const fundWallet = asyncHandler(async (req, res) => {
         })
         await transaction.save()
         return res.status(200).json({
-            message: 'Wallet Funded Successfully'
+            data: {
+                requestSuccessful: true,
+                sessionId,
+                responseMessage: "success",
+                responseCode: "00"
+            }
         })
     } catch (error) {
         res.status(500)
