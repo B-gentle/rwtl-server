@@ -144,7 +144,7 @@ const fundWallet = asyncHandler(async (req, res) => {
             return res.status(404).json({
                 requestSuccessful: true,
                 sessionId,
-                responseMessage: "rejected transaction1",
+                responseMessage: "rejected transaction",
                 responseCode: "02"
             })
         }
@@ -153,7 +153,7 @@ const fundWallet = asyncHandler(async (req, res) => {
             return res.status(404).json({
                 requestSuccessful: true,
                 sessionId,
-                responseMessage: "rejected transaction2",
+                responseMessage: "rejected transaction",
                 responseCode: "02"
             })
         }
@@ -180,7 +180,7 @@ const fundWallet = asyncHandler(async (req, res) => {
            return res.status(404).json({
                 requestSuccessful: true,
                 sessionId,
-                responseMessage: "rejected transaction3",
+                responseMessage: "rejected transaction",
                 responseCode: "02"
             })
         }
