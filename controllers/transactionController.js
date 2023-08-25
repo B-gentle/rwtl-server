@@ -202,12 +202,10 @@ const fundWallet = asyncHandler(async (req, res) => {
         })
         await transaction.save()
         return res.status(200).json({
-            data: {
                 requestSuccessful: true,
                 sessionId,
                 responseMessage: "success",
                 responseCode: "00"
-            }
         })
     } catch (error) {
         res.status(500)
