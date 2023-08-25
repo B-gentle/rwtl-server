@@ -137,12 +137,16 @@ const fundWallet = asyncHandler(async (req, res) => {
     } = req.body
 
     try {
-        const expectedSignature = 'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CDF2963FE314DFC89635CFA37A40596508DD6EAAB09402C7';
+        const expectedSignature = process.env.x_AUTH_SIGNATURE;
         const receivedSignature = req.headers['x-auth-signature'];
 
-        if (!receivedSignature || receivedSignature !== expectedSignature) {
-            res.status(401)
-            throw new Error('rejected response')
+        if (!receivedSignature || receivedSignature.toLowerCase() !== expectedSignature) {
+            return res.status(404).json({
+                requestSuccessful: true,
+                sessionId,
+                responseMessage: "rejected transaction",
+                responseCode: "02"
+            })
         }
 
         if (!sessionId || !accountNumber || !transactionAmount || !tranRemarks || !settledAmount || !feeAmount || !vatAmount || !currency || !settlementId || !sourceAccountNumber || !sourceAccountName || !sourceBankName || !channelId || !tranDateTime) {
