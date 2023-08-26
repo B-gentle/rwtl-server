@@ -177,7 +177,7 @@ const fundWallet = asyncHandler(async (req, res) => {
         })
 
         if (!currentUser) {
-           return res.status(200).json({
+            return res.status(200).json({
                 requestSuccessful: true,
                 sessionId,
                 responseMessage: "rejected transaction",
@@ -186,14 +186,12 @@ const fundWallet = asyncHandler(async (req, res) => {
         }
 
         if (transactionExist) {
-            const response = {
+            return res.status(200).json({
                 requestSuccessful: true,
                 sessionId,
                 responseMessage: "duplicate transaction",
                 responseCode: "01"
-
-            };
-           return res.status(200).json(response)
+            })
         }
 
         currentUser.walletBalance += Number(settledAmount);
@@ -210,10 +208,10 @@ const fundWallet = asyncHandler(async (req, res) => {
         })
         await transaction.save()
         return res.status(200).json({
-                requestSuccessful: true,
-                sessionId,
-                responseMessage: "success",
-                responseCode: "00"
+            requestSuccessful: true,
+            sessionId,
+            responseMessage: "success",
+            responseCode: "00"
         })
     } catch (error) {
         res.status(500)
