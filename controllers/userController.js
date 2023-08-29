@@ -610,6 +610,68 @@ const changePassword = asyncHandler(async (req, res) => {
 
 })
 
+const createTransactionPin = asyncHandler(async (req, res) => {
+    try {
+        const {
+            pin,
+        } = req.body;
+        const user = await User.findById(req.user._id)
+        if (!pin) {
+            res.status(400)
+            throw new Error("Please enter a Pin")
+        }
+
+        // check if user has an existing pin
+        if (user.transactionPin) {
+            res.status(300)
+            throw new Error('User already has a Transaction Pin');
+        }
+
+        if (user) {
+            user.transactionPin = pin;
+            await user.save();
+            res.status(200).send("pin created successfully")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+})
+
+const changePin = asyncHandler(async (req, res) => {
+    try {
+        const {
+            oldPin,
+            newPin
+        } = req.body;
+
+        const user = await User.findById(req.user._id)
+
+        if (!oldPin || !newPin) {
+            res.status(400)
+            throw new Error("Please fill in old and new pin")
+        }
+
+        if(oldPin.toString() !== user.transactionPin.toString()){
+            res.status(404)
+            throw new Error('Incorrect Old Pin')
+        }
+
+        user.transactionPin = newPin;
+        const updatedPin = await user.save();
+        if (updatedPin) {
+            res.status(200).send("pin changed successfully")
+        } else {
+            res.status(404)
+            throw new Error("Unable to change pin")
+        }
+    } catch (error) {
+        res.status(500)
+        throw new Error(error.message)
+    }
+
+})
+
 const forgotPassword = asyncHandler(async (req, res) => {
     const {
         email
@@ -935,7 +997,9 @@ const readNotification = asyncHandler(async (req, res) => {
 const getNotification = asyncHandler(async (req, res) => {
 
     try {
-        const notifications = await Notification.find().sort({createdAt: -1});
+        const notifications = await Notification.find().sort({
+            createdAt: -1
+        });
         res.status(200).json(notifications)
     } catch (error) {
         res.status(500)
@@ -984,7 +1048,7 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
             throw new Error('e no work')
         }
     } catch (error) {
-        console.error(error.message); 
+        console.error(error.message);
         res.status(404)
         throw new Error(error.message)
     }
@@ -1007,5 +1071,7 @@ module.exports = {
     upgradePackage,
     getUserIncentives,
     getNotification,
-    generateStaticAccount
+    generateStaticAccount,
+    createTransactionPin,
+    changePin
 }

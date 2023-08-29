@@ -141,7 +141,7 @@ const fundWallet = asyncHandler(async (req, res) => {
         const receivedSignature = req.headers['x-auth-signature'];
 
         if (!receivedSignature || receivedSignature.toLowerCase() !== expectedSignature.toLowerCase()) {
-            return res.status(404).json({
+            return res.status(200).json({
                 requestSuccessful: true,
                 sessionId,
                 responseMessage: "rejected transaction",
@@ -150,7 +150,7 @@ const fundWallet = asyncHandler(async (req, res) => {
         }
 
         if (!sessionId || !accountNumber || !transactionAmount || !tranRemarks || !settledAmount || !feeAmount || !vatAmount || !currency || !settlementId || !sourceAccountNumber || !sourceAccountName || !sourceBankName || !channelId || !tranDateTime) {
-            return res.status(404).json({
+            return res.status(200).json({
                 requestSuccessful: true,
                 sessionId,
                 responseMessage: "rejected transaction",

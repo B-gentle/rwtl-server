@@ -17,7 +17,9 @@ const {
     getUserIncentives,
     getNotification,
     getUserFullName,
-    generateStaticAccount
+    generateStaticAccount,
+    createTransactionPin,
+    changePin
 } = require("../controllers/userController");
 const {
     protect
@@ -40,6 +42,8 @@ router.get("/getuser", protect, getLoggedInUser)
 router.patch("/updateuser", protect, updateUser)
 router.patch("/upgradepackage", protect, upgradePackage)
 router.patch("/changepassword", protect, changePassword)
+router.patch("/create-pin", protect, createTransactionPin)
+router.patch("/change-pin", protect, changePin)
 router.post("/deleteuser", deleteUser)
 router.get("/getuserincentive", protect, getUserIncentives)
 router.get("/get-notifications", protect, getNotification)
