@@ -606,6 +606,9 @@ const changePassword = asyncHandler(async (req, res) => {
             res.status(404)
             throw new Error("Unable to change password or incorrect old password")
         }
+    }else{
+        res.status(400)
+        throw new Error('invalid old password')
     }
 
 })
