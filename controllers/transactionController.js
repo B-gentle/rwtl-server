@@ -189,7 +189,14 @@ const fundWallet = asyncHandler(async (req, res) => {
             })
         }
 
-        currentUser.walletBalance += Number(settledAmount);
+        let charges;
+        if(settledAmount < 10000) {
+            charges = 30
+        } else if(settledAmount > 10000) {
+            charges = 70
+        }
+
+        currentUser.walletBalance += Number(settledAmount - charges);
         await currentUser.save();
 
         const transaction = new Transaction({
@@ -197,7 +204,7 @@ const fundWallet = asyncHandler(async (req, res) => {
             transactionType: 'walletFunding',
             user: currentUser._id,
             newWalletBalance: currentUser.walletBalance,
-            prevWalletBalance: currentUser.walletBalance -= Number(settledAmount),
+            prevWalletBalance: currentUser.walletBalance -= Number(settledAmount - charges),
             amount: settledAmount,
             status: 'successful',
         })

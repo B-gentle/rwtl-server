@@ -1042,9 +1042,11 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
             headers
         });
         if (response.data.requestSuccessful === true) {
+            console.log(user)
             user.staticAccount = response.data.account_number
             user.staticAccountName = response.data.account_name
-           return res.status(200).json('Static Account generated successfully')
+            await user.save();
+           res.status(200).json('Static Account generated successfully')
         } else {
             res.status(400)
             throw new Error('Unable to generate Static Account')
