@@ -158,11 +158,6 @@ const fundWallet = asyncHandler(async (req, res) => {
             })
         }
 
-        // if (!data) {
-        //     res.status(404)
-        //     throw new Error('Please fill in all field')
-        // }
-
         if (transactionAmount <= 0) {
             res.status(400)
             throw new Error('please enter a valid amount')

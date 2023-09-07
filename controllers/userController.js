@@ -1025,7 +1025,7 @@ const readByNotification = asyncHandler(async (req, res) => {
 
 const generateStaticAccount = asyncHandler(async (req, res) => {
 
-    const url = 'http://154.113.16.142:8088/appdevapi/api/PiPCreateDynamicAccountNumber';
+    const url = `${process.env.PROVIDUS_BASE_URI}/PiPCreateDynamicAccountNumber`;
     const user = await User.findById(req.user.id);
     const username = user.username
     const data = {
@@ -1033,8 +1033,8 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
     };
     const headers = {
         'Content-Type': 'application/json',
-        'X-Auth-Signature': 'BE09BEE831CF262226B426E39BD1092AF84DC63076D4174FAC78A2261F9A3D6E59744983B8326B69CDF2963FE314DFC89635CFA37A40596508DD6EAAB09402C7',
-        'Client-Id': 'dGVzdF9Qcm92aWR1cw=='
+        'X-Auth-Signature': process.env.X_AUTH_SIGNATURE,
+        'Client-Id': process.env.CLIENT_ID
     };
 
     try {
@@ -1044,11 +1044,10 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
         if (response.data.requestSuccessful === true) {
             user.staticAccount = response.data.account_number
             user.staticAccountName = response.data.account_name
-            res.status(200).json('done')
-            // Handle the response data here
+           return res.status(200).json('Static Account generated successfully')
         } else {
             res.status(400)
-            throw new Error('e no work')
+            throw new Error('Unable to generate Static Account')
         }
     } catch (error) {
         console.error(error.message);
