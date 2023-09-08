@@ -1025,11 +1025,12 @@ const readByNotification = asyncHandler(async (req, res) => {
 
 const generateStaticAccount = asyncHandler(async (req, res) => {
 
-    const url = `${process.env.PROVIDUS_BASE_URI}/PiPCreateDynamicAccountNumber`;
+    const url = `${process.env.PROVIDUS_BASE_URI}/PiPCreateReservedAccountNumber`;
     const user = await User.findById(req.user.id);
     const username = user.username
     const data = {
-        account_name: username
+        account_name: username,
+        bvn: ""
     };
     const headers = {
         'Content-Type': 'application/json',
@@ -1042,17 +1043,15 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
             headers
         });
         if (response.data.requestSuccessful === true) {
-            console.log(user)
             user.staticAccount = response.data.account_number
             user.staticAccountName = response.data.account_name
             await user.save();
            res.status(200).json('Static Account generated successfully')
         } else {
             res.status(400)
-            throw new Error('Unable to generate Static Account')
+            throw new Error('Request Failed! Please try again')
         }
     } catch (error) {
-        console.error(error.message);
         res.status(404)
         throw new Error(error.message)
     }
