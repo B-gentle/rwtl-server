@@ -169,6 +169,10 @@ const transactionSchema = new mongoose.Schema({
         }
     },
 
+    charges: {
+        type: Number
+    },
+
 }, {
     timestamps: true
 });

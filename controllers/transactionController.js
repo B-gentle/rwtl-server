@@ -206,6 +206,7 @@ const fundWallet = asyncHandler(async (req, res) => {
             newWalletBalance: currentUser.walletBalance,
             prevWalletBalance: currentUser.walletBalance -= Number(transactionAmount - charges),
             amount: transactionAmount - charges,
+            charges,
             status: 'successful',
         })
         await transaction.save()
