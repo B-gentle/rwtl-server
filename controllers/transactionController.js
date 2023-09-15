@@ -192,11 +192,15 @@ const fundWallet = asyncHandler(async (req, res) => {
         let charges;
         if(transactionAmount < 10000) {
             charges = 30
-        } else if(transactionAmount > 10000) {
+        } else if(transactionAmount >= 10000) {
             charges = 70
         }
 
+        console.log(currentUser.walletBalance)
+        console.log(transactionAmount)
+        console.log(charges)
         currentUser.walletBalance += Number(transactionAmount - charges);
+        console.log(currentUser.walletBalance)
         await currentUser.save();
 
         const transaction = new Transaction({
@@ -217,6 +221,7 @@ const fundWallet = asyncHandler(async (req, res) => {
         })
     } catch (error) {
         res.status(500)
+        console.log(error.message)
         throw new Error(error.message)
     }
 })
