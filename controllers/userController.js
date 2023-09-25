@@ -865,7 +865,7 @@ const addDownline = asyncHandler(async (req, res) => {
         currentUser.walletBalance -= selectedPackage.amount;
         await currentUser.save();
         addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv);
-        calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
+        calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv, user._id)
         const url = 'https://myrechargewise.com/login'
         const message = `
                 <h2>Hello ${user.fullname}</h2>
@@ -902,7 +902,7 @@ const addDownline = asyncHandler(async (req, res) => {
             },
             registeredUser: user.username,
             amount: selectedPackage.amount,
-            user: req.user._id
+            user: req.user._id,
         });
 
         await transaction.save();
