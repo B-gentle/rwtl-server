@@ -149,7 +149,7 @@ const fundWallet = asyncHandler(async (req, res) => {
             })
         }
 
-        if (!sessionId || !accountNumber || !transactionAmount || !tranRemarks || !settledAmount || !feeAmount || !vatAmount || !currency || !settlementId || !sourceAccountNumber || !sourceAccountName || !sourceBankName || !channelId || !tranDateTime) {
+        if (!sessionId || !accountNumber || !transactionAmount || !settledAmount || !settlementId || !tranDateTime) {
             return res.status(200).json({
                 requestSuccessful: true,
                 sessionId,

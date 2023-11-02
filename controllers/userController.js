@@ -462,7 +462,6 @@ const upgradePackage = asyncHandler(async (req, res) => {
     currentUser.package.ID = selectedPackage._id;
     currentUser.package.name = selectedPackage.name;
     currentUser.walletBalance -= packageDifference;
-    commission: currentUserPackage.instantCashBack * packageDifference
     currentUser.commissionBalance += currentUserPackage.instantCashBack * packageDifference
     currentUser.withdrawableCommission += currentUserPackage.instantCashBack * packageDifference
     currentUser.monthlyPv += packagePvDifference;
@@ -495,7 +494,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
         const userPackage = await Package.findById(currentUser.package.ID);
 
         if (upline && upline.package && upline.package.ID) {
-            const uplinePackage = await Package.findById(upline.package.ID);
+            let uplinePackage = await Package.findById(upline.package.ID);
             const referralBonuses = uplinePackage.uplineBonuses
 
             for (const bonus of referralBonuses) {
@@ -532,6 +531,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
 
                 if (upline && upline.upline && upline.upline.ID) {
                     upline = await User.findById(upline.upline.ID);
+                    uplinePackage = await Package.findById(upline.package.ID);
                     userLevel += 1;
                 } else {
                     break;
@@ -543,6 +543,7 @@ const upgradePackage = asyncHandler(async (req, res) => {
 
 
     } catch (error) {
+        console.log(error)
         res.status(500)
         throw new Error(error.message)
     }

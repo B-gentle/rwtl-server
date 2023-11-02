@@ -432,7 +432,7 @@ const editUserPersonalInformation = asyncHandler(async (req, res) => {
             user.username = username || user.username
             user.email = email || user.email;
             user.commissionBalance = commissionBalance || user.commissionBalance
-            // user.pv = pv || user.pv
+            user.pv = pv || user.pv
             user.walletBalance = walletBalance || user.walletBalance
             user.withdrawableCommission = withdrawableCommission || user.withdrawableCommission
             const updatedUser = await user.save();
