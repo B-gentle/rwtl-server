@@ -25,15 +25,27 @@ const insertQuery = async (req, res) => {
     const currentMonth = new Date().getMonth() + 1; // January is month 0, so we add 1 to get the correct month number.
     const currentYear = new Date().getFullYear();
 
-    const commissions =  { "level": 6, "percentage": 0.0010 }
+    const instantCashBackData = [
+          { "level": 1, "bonusPercentage": 0.25 },
+          { "level": 2, "bonusPercentage": 0.10 },
+          { "level": 3, "bonusPercentage": 0.03 },
+          { "level": 4, "bonusPercentage": 0.02 },
+          { "level": 5, "bonusPercentage": 0.01 },
+          { "level": 6, "bonusPercentage": 0.01 },
+          { "level": 7, "bonusPercentage": 0.01 },
+          { "level": 8, "bonusPercentage": 0.01 },
+          { "level": 9, "bonusPercentage": 0.01 },
+          { "level": 10, "bonusPercentage": 0.01 }
+          ]
+ 
            
     try {
         await Package.updateMany({}, {
-            transaction: commissions
+            uplineBonuses: instantCashBackData
         })
         // await CurrentDate.create({Day: 2, Month: 6, Year: currentYear});
         res.status(200).json({
-            message: 'transaction updated successfully'
+            message: 'Package updated successfully'
         })
     } catch (error) {
         console.log(error)

@@ -29,14 +29,14 @@ const calculateUplineBonuses = async (uplineID, packageID, pv, user) => {
                         idpv = 0
                         upline.monthlyPv += pv
                     } else if (userLevel >= 2 && userLevel <= 5) {
-                        upline.indirectPv += 0.5 * pv
+                        upline.indirectPv +=  pv
                         dpv = 0
-                        idpv = 0.5 * pv
-                        upline.monthlyPv += 0.5 * pv
+                        idpv =  pv
+                        upline.monthlyPv +=  pv
                     } else if (userLevel >= 6 && userLevel <= 10) {
-                        upline.monthlyPv += 0.25 * pv
-                        upline.indirectPv += 0.25 * pv
-                        idpv = 0.25 * pv
+                        upline.monthlyPv += 0.5 * pv
+                        upline.indirectPv += 0.5 * pv
+                        idpv = 0.5 * pv
                         dpv = 0
                     }
                     upline.pv += idpv + dpv;

@@ -145,6 +145,10 @@ const userSchema = mongoose.Schema({
     type: Number,
     default: 0
   },
+  emberPv: {
+    type: Number,
+    default: 0
+  },
 
   commissionBalance: {
     type: Number,
