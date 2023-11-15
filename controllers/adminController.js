@@ -227,7 +227,7 @@ const completeUserRegistration = asyncHandler(async (req, res) => {
     // add user to upline's downline
     addToDownline(user.username, user.upline.ID, user._id, selectedPackage.name, selectedPackage.pv)
     user.passkey = undefined;
-    calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv)
+    calculateUplineBonuses(user.upline.ID, selectedPackage._id, selectedPackage.pv, user._id)
     const registered = await user.save();
     if (registered) {
         // Reset Email
