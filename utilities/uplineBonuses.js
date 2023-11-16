@@ -43,7 +43,6 @@ const calculateUplineBonuses = async (uplineID, packageID, pv, user) => {
                         dpv = 0
                     }
                     upline.pv += idpv + dpv;
-                    upline.emberPv += idpv + dpv
                     await upline.save();
                     const refBonusModel = new ReferralBonus({
                         user,
