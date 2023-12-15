@@ -853,7 +853,7 @@ const addDownline = asyncHandler(async (req, res) => {
     user.referralCode = generateReferralCode(stringId, user.username);
     user.referralLink = generateReferralLink(user.referralCode)
     user.walletBalance += selectedPackage.amount * selectedPackage.instantCashBack
-    user.emberPv += selectedPackage.pv
+    // user.emberPv += selectedPackage.pv
 
     //     //add upline
     user.upline = {
