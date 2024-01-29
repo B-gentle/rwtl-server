@@ -1,4 +1,5 @@
 const DataPlan = require("../models/dataPlansModel");
+const JoenatechDataPlan = require("../models/joenatechMTNDataModel");
 const asyncHandler = require("express-async-handler");
 const axios = require('axios')
 
@@ -33,14 +34,25 @@ const getCablePlans = asyncHandler(async (req, res) => {
         cable.some((object) => object.ID === cableNetwork)
     );
     const selectedProducts = selectedCable.map((product) => product.PRODUCT);
-    res.status(200).json({
-        data: selectedProducts
-    })
+    res.status(200).json(selectedProducts)
 
+})
+
+const getJoeNadMtnPlan = asyncHandler(async (req, res) => {
+    const plans = await JoenatechDataPlan.find({
+        network: "MTN"
+    })
+    if (plans) {
+        res.status(200).json(plans)
+    } else {
+        res.status(400)
+        throw new Error("No data plan found")
+    }
 })
 
 
 module.exports = {
     getDataPlan,
     getCablePlans,
+    getJoeNadMtnPlan
 }

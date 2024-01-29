@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Transaction = require("../models/transactionModel");
+const JoenatechDataPlan = require("../models/joenatechMTNDataModel");
 const axios = require('axios');
 const User = require("../models/userModel");
 const Package = require('../models/packageModel');
@@ -190,9 +191,9 @@ const fundWallet = asyncHandler(async (req, res) => {
         }
 
         let charges;
-        if(transactionAmount < 10000) {
+        if (transactionAmount < 10000) {
             charges = 30
-        } else if(transactionAmount >= 10000) {
+        } else if (transactionAmount >= 10000) {
             charges = 70
         }
         currentUser.walletBalance += Number(transactionAmount - charges);
@@ -388,68 +389,51 @@ const purchaseData = async (req, res) => {
         networkPlan
     } = req.body;
 
-    try {
+    if (!network || !phoneNumber || !networkPlan) {
+        return res.status(400).json({
+            message: 'Please provide all the required fields'
+        });
+    }
 
-        // Check if required data is provided
-        if (!network || !phoneNumber || !networkPlan) {
-            return res.status(400).json({
-                message: 'Please provide all the required fields'
-            });
-        }
+    const transactionId = req.user.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
 
-        const discountRates = {
-            '01': 2, // MTN @ 3.5%
-            '02': 4, // Glo @ 8%
-            '04': 2, // Airtel @ 3.5%
-            '03': 4 // 9mobile @ 6.5%
-        };
+    const currentUser = await User.findById(req.user.id).populate('package');
+    if (currentUser.walletBalance < amount) {
+        return res.status(400).json({
+            message: 'Insufficient wallet balance'
+        });
+    }
 
-        // Check if the provided mobile network is valid
-        if (!discountRates.hasOwnProperty(network)) {
-            return res.status(400).json({
-                message: 'Invalid mobile network code'
-            });
-        }
+    if (network === "01") {
 
-        // Calculate the bonus amount based on the discount rate
-        const discountRate = discountRates[network];
-        const userCommission = (amount * (discountRate / 100)).toFixed(2);
-
-        const currentUser = await User.findById(req.user.id).populate('package');
-
-        // Check if the user has sufficient balance in their wallet
-        if (currentUser.walletBalance < amount) {
-            return res.status(400).json({
-                message: 'Insufficient wallet balance'
-            });
-        }
-
-        // Calculate the bonus amount based on the profit
-        const transactionId = req.user.username + `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
-        // Make the API call to purchase data
+        const selectedNetwork = await JoenatechDataPlan.find({
+            networkId: 1
+        })
+        const selectedPlan = selectedNetwork[0].plans.find((plan) => plan.PRODUCT_AMOUNT === Number(amount - 5))
+        const profit = Number(amount) - Number(selectedPlan.planAmount)
+        const userCommission = 0.02 * amount
         try {
-            const response = await axios.get('https://www.nellobytesystems.com/APIDatabundleV1.asp', {
-                params: {
-                    UserID: process.env.CLUB_KONNECT_USER_ID,
-                    APIKey: process.env.CLUB_KONNECT_API_KEY,
-                    MobileNetwork: network,
-                    DataPlan: networkPlan,
-                    MobileNumber: phoneNumber,
-                    RequestID: transactionId,
-                    CallBackURL: 'https://localhost:5000/'
+            const response = await axios.post('https://geodnatechsub.com/api/data/', {
+                "network": network,
+                "mobile_number": phoneNumber,
+                "plan": networkPlan,
+                "Ported_number": true,
+            }, {
+                headers: {
+                    'Authorization': 'Token 3e3a1f01d011d2f56d9ecd364ce4e002c1f2a0a6',
+                    'Content-Type': 'application/json'
                 }
-            });
-
-            // Check if the data purchase was successful
-            if (response.data.statuscode === '100') {
-                // Deduct the purchase amount from the user's wallet balance
+            })
+            // check if the call was successful
+            if (response.data.Status === 'successful') {
+                //  Deduct the purchase amount from the user's wallet balance
                 currentUser.walletBalance -= Number(amount)
                 // Add the bonus amount to the user's balance
                 currentUser.commissionBalance += parseFloat(userCommission);
                 currentUser.withdrawableCommission += parseFloat(userCommission);
                 await currentUser.save();
 
-                // Create a new transaction object
+                // create new transaction object
                 const transaction = new Transaction({
                     transactionId,
                     transactionType: 'data',
@@ -468,9 +452,85 @@ const purchaseData = async (req, res) => {
                 // Save the transaction object
                 await transaction.save();
 
-                //database transaction - learn it.
-
                 // Calculate and pay uplines based on package levels and percentages
+                payUplines(currentUser.upline.ID, amount, transactionId, network, phoneNumber, )
+                res.status(200).json({
+                    message: response.data.api_response
+                })
+            } else {
+                res.status(400).json({
+                    message: 'Purchase not succesful, please try again'
+                })
+            }
+
+        } catch (error) {
+            const message = error && error.response && error.response.data && error.response.data.error.toString()
+            res.status(404).json({
+                message: message
+            });
+        }
+
+    } else {
+        try {
+            const discountRates = {
+                '01': 2, // MTN @ 3.5%
+                '02': 4, // Glo @ 8%
+                '04': 2, // Airtel @ 3.5%
+                '03': 4 // 9mobile @ 6.5%
+            };
+
+            //     // Check if the provided mobile network is valid
+            if (!discountRates.hasOwnProperty(network)) {
+                return res.status(400).json({
+                    message: 'Invalid mobile network code'
+                });
+            }
+
+            // Calculate the bonus amount based on the discount rate
+            const discountRate = discountRates[network];
+            const userCommission = (amount * (discountRate / 100)).toFixed(2);
+
+            const response = await axios.get('https://www.nellobytesystems.com/APIDatabundleV1.asp', {
+                params: {
+                    UserID: process.env.CLUB_KONNECT_USER_ID,
+                    APIKey: process.env.CLUB_KONNECT_API_KEY,
+                    MobileNetwork: network,
+                    DataPlan: networkPlan,
+                    MobileNumber: phoneNumber,
+                    RequestID: transactionId,
+                    CallBackURL: 'https://localhost:5000/'
+                }
+            });
+
+            //         // Check if the data purchase was successful
+            if (response.data.statuscode === '100') {
+                // Deduct the purchase amount from the user's wallet balance
+                currentUser.walletBalance -= Number(amount)
+                // Add the bonus amount to the user's balance
+                currentUser.commissionBalance += parseFloat(userCommission);
+                currentUser.withdrawableCommission += parseFloat(userCommission);
+                await currentUser.save();
+
+                //  Create a new transaction object
+                const transaction = new Transaction({
+                    transactionId,
+                    transactionType: 'data',
+                    status: 'successful',
+                    commission: parseFloat(userCommission),
+                    network,
+                    phoneNumber,
+                    prevWalletBalance: currentUser.walletBalance + Number(amount),
+                    newWalletBalance: currentUser.walletBalance,
+                    prevCommissionBalance: currentUser.withdrawableCommission - parseFloat(userCommission),
+                    newCommissionBalance: currentUser.withdrawableCommission,
+                    amount,
+                    user: req.user._id
+                });
+
+                // Save the transaction object
+                await transaction.save();
+
+                //  Calculate and pay uplines based on package levels and percentages
                 payUplines(currentUser.upline.ID, amount, transactionId, network, phoneNumber, )
 
                 return res.status(200).json({
@@ -479,19 +539,18 @@ const purchaseData = async (req, res) => {
                 });
             } else {
                 // Return error response if the data purchase failed
+                //database transaction - learn it.
                 return res.status(400).json({
                     message: response.data.status
                 });
             }
+
         } catch (error) {
-            console.error(error);
             return res.status(500).json({
                 message: 'Internal server error'
-            });
+            })
         }
-    } catch (error) {
-        res.status(500)
-        throw new Error(error.message)
+
     }
 };
 
