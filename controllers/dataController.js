@@ -33,6 +33,7 @@ const getCablePlans = asyncHandler(async (req, res) => {
     const selectedCable = Object.values(response.data.TV_ID).find((cable) =>
         cable.some((object) => object.ID === cableNetwork)
     );
+
     const selectedProducts = selectedCable.map((product) => product.PRODUCT);
     res.status(200).json(selectedProducts)
 
