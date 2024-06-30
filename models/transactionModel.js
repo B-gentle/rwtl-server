@@ -93,6 +93,13 @@ const transactionSchema = new mongoose.Schema({
         }
     },
 
+    ExamType: {
+        type: String,
+        required: function () {
+            return this.type === 'exams'
+        }
+    },
+
     package: {
         name: {
             type: String,
