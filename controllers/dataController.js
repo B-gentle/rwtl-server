@@ -39,9 +39,10 @@ const getCablePlans = asyncHandler(async (req, res) => {
 
 })
 
-const getJoeNadMtnPlan = asyncHandler(async (req, res) => {
+const getJoeNadPlan = asyncHandler(async (req, res) => {
+    const {networkCode} = req.body
     const plans = await JoenatechDataPlan.find({
-        network: "MTN"
+        networkId: networkCode
     })
     if (plans) {
         res.status(200).json(plans)
@@ -55,5 +56,5 @@ const getJoeNadMtnPlan = asyncHandler(async (req, res) => {
 module.exports = {
     getDataPlan,
     getCablePlans,
-    getJoeNadMtnPlan
+    getJoeNadPlan
 }
