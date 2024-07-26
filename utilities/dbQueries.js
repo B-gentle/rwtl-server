@@ -283,12 +283,62 @@ const insertDataPlans = async (req, res) => {
     {
       network: "AIRTEL",
       networkId: 4,
-      plans: [{
+      plans: [
+        {
         PRODUCT_ID: 243,
         PRODUCT_NAME: "100MB AIRTEL CORPORATE GIFTING = ₦37 1 month",
         planAmount: 32,
         PRODUCT_AMOUNT: 32
-      }],
+      },
+      {
+        PRODUCT_ID: 244,
+        PRODUCT_NAME: "300MB AIRTEL CORPORATE GIFTING = ₦92 1 month",
+        planAmount: 87,
+        PRODUCT_AMOUNT: 87
+      },
+      {
+        PRODUCT_ID: 232,
+        PRODUCT_NAME: "500MB AIRTEL CORPORATE GIFTING = ₦150 1 month",
+        planAmount: 145,
+        PRODUCT_AMOUNT: 145
+      },
+      {
+        PRODUCT_ID: 228,
+        PRODUCT_NAME: "1GB AIRTEL CORPORATE GIFTING = ₦295 1 month",
+        planAmount: 290,
+        PRODUCT_AMOUNT: 290
+      },
+      {
+        PRODUCT_ID: 229,
+        PRODUCT_NAME: "2GB AIRTEL CORPORATE GIFTING = ₦590 1 month",
+        planAmount: 585,
+        PRODUCT_AMOUNT: 585
+      },
+      {
+        PRODUCT_ID: 231,
+        PRODUCT_NAME: "5GB AIRTEL CORPORATE GIFTING = ₦1475 1 month",
+        planAmount: 1470,
+        PRODUCT_AMOUNT: 1470
+      },
+      {
+        PRODUCT_ID: 240,
+        PRODUCT_NAME: "10GB AIRTEL CORPORATE GIFTING = ₦2950 1 month",
+        planAmount: 2945,
+        PRODUCT_AMOUNT: 2945
+      },
+      {
+        PRODUCT_ID: 241,
+        PRODUCT_NAME: "15GB AIRTEL CORPORATE GIFTING = ₦3575 1 month",
+        planAmount: 3570,
+        PRODUCT_AMOUNT: 3570
+      },
+      {
+        PRODUCT_ID: 242,
+        PRODUCT_NAME: "20GB AIRTEL CORPORATE GIFTING = ₦5900 1 month",
+        planAmount: 5895,
+        PRODUCT_AMOUNT: 5895
+      }
+    ],
     },
   ];
 

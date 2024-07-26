@@ -6,7 +6,7 @@ const payUplines = async (currentUserUplineId, amount, transactionId, network, p
     try {
 
         let uplineID = currentUserUplineId;
-        let earningLimit = 7;
+        let earningLimit = 5;
 
         for (let i = 1; i <= earningLimit; i++) {
             let generation = i
@@ -54,7 +54,7 @@ const payUtilityUplines = async ( currentUserUplineId, amount, transactionId, nu
     try {
 
         let uplineID = currentUserUplineId;
-        let earningLimit = 6;
+        let earningLimit = 5;
 
         for (let i = 1; i <= earningLimit; i++) {
             let generation = i
