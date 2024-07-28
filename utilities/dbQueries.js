@@ -440,9 +440,116 @@ const insertDataPlans = async (req, res) => {
           planAmount: 585,
           PRODUCT_AMOUNT: 585,
         },
-        
+        {
+          PRODUCT_ID: 256,
+          PRODUCT_NAME: "3GB GLO CORPORATE GIFTING = ₦885 1 Month",
+          planAmount: 880,
+          PRODUCT_AMOUNT: 880,
+        },
+        {
+          PRODUCT_ID: 261,
+          PRODUCT_NAME: "5GB GLO CORPORATE GIFTING = ₦1475 1 Month",
+          planAmount: 1470,
+          PRODUCT_AMOUNT: 1470,
+        },
+        {
+          PRODUCT_ID: 258,
+          PRODUCT_NAME: "10GB GLO CORPORATE GIFTING = ₦2950 1 Month",
+          planAmount: 2945,
+          PRODUCT_AMOUNT: 2945,
+        },
+        {
+          PRODUCT_ID: 37,
+          PRODUCT_NAME: "1.35GB GLO GIFTING = ₦493 2 Weeks",
+          planAmount: 488,
+          PRODUCT_AMOUNT: 488,
+        },
+        {
+          PRODUCT_ID: 32,
+          PRODUCT_NAME: "2.9GB GLO GIFTING = ₦1,110 1 Month",
+          planAmount: 1105,
+          PRODUCT_AMOUNT: 1105,
+        },
+        {
+          PRODUCT_ID: 96,
+          PRODUCT_NAME: "4.1GB GLO GIFTING = ₦1510 1 Month",
+          planAmount: 1505,
+          PRODUCT_AMOUNT: 1505,
+        },
+        {
+          PRODUCT_ID: 197,
+          PRODUCT_NAME: "5.8GB GLO GIFTING = ₦2020 1 Month",
+          planAmount: 2015,
+          PRODUCT_AMOUNT: 2015,
+        },
+        {
+          PRODUCT_ID: 198,
+          PRODUCT_NAME: "7.7GB GLO GIFTING = ₦2540 1 Month",
+          planAmount: 2535,
+          PRODUCT_AMOUNT: 2535,
+        },
+        {
+          PRODUCT_ID: 199,
+          PRODUCT_NAME: "10GB GLO GIFTING = ₦3060 1 Month",
+          planAmount: 3055,
+          PRODUCT_AMOUNT: 3055,
+        },
+        {
+          PRODUCT_ID: 67,
+          PRODUCT_NAME: "14GB GLO GIFTING = ₦4100 1 Month",
+          planAmount: 4095,
+          PRODUCT_AMOUNT: 4095,
+        },
+        {
+          PRODUCT_ID: 201,
+          PRODUCT_NAME: "20GB GLO GIFTING = ₦5200 1 Month",
+          planAmount: 5195,
+          PRODUCT_AMOUNT: 5195,
+        },
+        {
+          PRODUCT_ID: 71,
+          PRODUCT_NAME: "29.5GB GLO GIFTING = ₦8250 1 Month",
+          planAmount: 8245,
+          PRODUCT_AMOUNT: 8245,
+        },
+        {
+          PRODUCT_ID: 203,
+          PRODUCT_NAME: "50GB GLO GIFTING = ₦10,700 1 Month",
+          planAmount: 10695,
+          PRODUCT_AMOUNT: 10695,
+        },
+        {
+          PRODUCT_ID: 204,
+          PRODUCT_NAME: "93GB GLO GIFTING = ₦16,590 1 Month",
+          planAmount: 16585,
+          PRODUCT_AMOUNT: 16585,
+        },
+        {
+          PRODUCT_ID: 205,
+          PRODUCT_NAME: "119GB GLO GIFTING = ₦20,560 1 Month",
+          planAmount: 20555,
+          PRODUCT_AMOUNT: 20555,
+        },
+        {
+          PRODUCT_ID: 206,
+          PRODUCT_NAME: "138GB GLO GIFTING = ₦22,540 1 Month",
+          planAmount: 22535,
+          PRODUCT_AMOUNT: 22535,
+        },
       ],
     },
+    {
+      network: "9MOBILE",
+      networkId: 3,
+      plans: [
+        {
+          PRODUCT_ID: 284,
+          PRODUCT_NAME: "300MB 9MBILE CORPORATE GIFTING = ₦65 1 week",
+          planAmount: 60,
+          PRODUCT_AMOUNT: 60,
+        }
+      ]
+    }
   ];
 
   // Added 8% to all prices

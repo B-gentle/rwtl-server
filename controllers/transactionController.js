@@ -412,7 +412,7 @@ const purchaseData = async (req, res) => {
     });
   }
 
-  if (network === "1" || network === "2" || network === "4") {
+  if (network === "1" || network === "2" || network === "3" || network === "4") {
     const selectedNetwork = await JoenatechDataPlan.find({
       networkId: network,
     });
