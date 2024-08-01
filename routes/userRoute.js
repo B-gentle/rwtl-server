@@ -19,10 +19,11 @@ const {
     getUserFullName,
     generateStaticAccount,
     createTransactionPin,
-    changePin
+    changePin,
+    getTotalUsers
 } = require("../controllers/userController");
 const {
-    protect
+    protect, adminProtect
 } = require("../middleWare/authMiddleware");
 const User = require("../models/userModel");
 const router = express.Router();
@@ -47,6 +48,7 @@ router.patch("/change-pin", protect, changePin)
 router.post("/deleteuser", deleteUser)
 router.get("/getuserincentive", protect, getUserIncentives)
 router.get("/get-notifications", protect, getNotification)
+router.get("/get-total-users", adminProtect, getTotalUsers)
 
 
 module.exports = router;

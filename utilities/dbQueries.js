@@ -430,9 +430,9 @@ const insertDataPlans = async (req, res) => {
         },
         {
           PRODUCT_ID: 254,
-          PRODUCT_NAME: "1GB GLO CORPORATE GIFTING = ₦153 1 Month",
-          planAmount: 148,
-          PRODUCT_AMOUNT: 148,
+          PRODUCT_NAME: "1GB GLO CORPORATE GIFTING = ₦290 1 Month",
+          planAmount: 285,
+          PRODUCT_AMOUNT: 285,
         },
         {
           PRODUCT_ID: 255,
@@ -460,9 +460,9 @@ const insertDataPlans = async (req, res) => {
         },
         {
           PRODUCT_ID: 37,
-          PRODUCT_NAME: "1.35GB GLO GIFTING = ₦493 2 Weeks",
-          planAmount: 488,
-          PRODUCT_AMOUNT: 488,
+          PRODUCT_NAME: "1.35GB GLO GIFTING = ₦495 2 Weeks",
+          planAmount: 490,
+          PRODUCT_AMOUNT: 490,
         },
         {
           PRODUCT_ID: 32,
@@ -544,10 +544,112 @@ const insertDataPlans = async (req, res) => {
       plans: [
         {
           PRODUCT_ID: 284,
-          PRODUCT_NAME: "300MB 9MBILE CORPORATE GIFTING = ₦65 1 week",
+          PRODUCT_NAME: "300MB 9MOBILE CORPORATE GIFTING = ₦65 1 week",
           planAmount: 60,
           PRODUCT_AMOUNT: 60,
-        }
+        },
+        {
+          PRODUCT_ID: 270,
+          PRODUCT_NAME: "500MB 9MOBILE CORPORATE GIFTING = ₦92 2 weeks",
+          planAmount: 87,
+          PRODUCT_AMOUNT: 87
+        },
+        {
+          PRODUCT_ID: 262,
+          PRODUCT_NAME: "1GB 9MOBILE CORPORATE GIFTING = ₦165 1 Month",
+          planAmount: 160,
+          PRODUCT_AMOUNT: 160,
+        },
+        {
+          PRODUCT_ID: 263,
+          PRODUCT_NAME: "2GB 9MOBILE CORPORATE GIFTING = ₦330 1 Month",
+          planAmount: 325,
+          PRODUCT_AMOUNT: 325,
+        },
+        {
+          PRODUCT_ID: 264,
+          PRODUCT_NAME: "3GB 9MOBILE CORPORATE GIFTING = ₦495 1 Month",
+          planAmount: 490,
+          PRODUCT_AMOUNT: 490,
+        },
+        {
+          PRODUCT_ID: 285,
+          PRODUCT_NAME: "5GB 9MOBILE CORPORATE GIFTING = ₦825 1 Month",
+          planAmount: 820,
+          PRODUCT_AMOUNT: 820,
+        },
+        {
+          PRODUCT_ID: 266,
+          PRODUCT_NAME: "10GB 9MOBILE CORPORATE GIFTING = ₦1650 1 Month",
+          planAmount: 1645,
+          PRODUCT_AMOUNT: 1645,
+        },
+        {
+          PRODUCT_ID: 269,
+          PRODUCT_NAME: "20GB 9MOBILE CORPORATE GIFTING = ₦3200 1 Month",
+          planAmount: 3195,
+          PRODUCT_AMOUNT: 3195,
+        },
+        {
+          PRODUCT_ID: 268,
+          PRODUCT_NAME: "40GB 9MOBILE CORPORATE GIFTING = ₦6600 1 Month",
+          planAmount: 6595,
+          PRODUCT_AMOUNT: 6595,
+        },
+        {
+          PRODUCT_ID: 245,
+          PRODUCT_NAME: "500MB 9MOBILE GIFTING = ₦450 1 Week",
+          planAmount: 445,
+          PRODUCT_AMOUNT: 445,
+        },
+        {
+          PRODUCT_ID: 183,
+          PRODUCT_NAME: "1.5GB 9MOBILE GIFTING = ₦905 1 Month",
+          planAmount: 900,
+          PRODUCT_AMOUNT: 900,
+        },
+        {
+          PRODUCT_ID: 14,
+          PRODUCT_NAME: "2GB 9MOBILE GIFTING = ₦1092 1 Month",
+          planAmount: 1087,
+          PRODUCT_AMOUNT: 1087,
+        },
+        {
+          PRODUCT_ID: 185,
+          PRODUCT_NAME: "3GB 9MOBILE GIFTING = ₦1380 1 Month",
+          planAmount: 1375,
+          PRODUCT_AMOUNT: 1375,
+        },
+        {
+          PRODUCT_ID: 186,
+          PRODUCT_NAME: "4.5GB 9MOBILE GIFTING = ₦1855 1 Month",
+          planAmount: 1850,
+          PRODUCT_AMOUNT: 1850,
+        },
+        {
+          PRODUCT_ID: 187,
+          PRODUCT_NAME: "11GB 9MOBILE GIFTING = ₦3770 1 Month",
+          planAmount: 3765,
+          PRODUCT_AMOUNT: 3765,
+        },
+        {
+          PRODUCT_ID: 188,
+          PRODUCT_NAME: "15GB 9MOBILE GIFTING = ₦4750 1 Month",
+          planAmount: 4745,
+          PRODUCT_AMOUNT: 4745,
+        },
+        {
+          PRODUCT_ID: 189,
+          PRODUCT_NAME: "40GB 9MOBILE GIFTING = ₦9800 1 Month",
+          planAmount: 9795,
+          PRODUCT_AMOUNT: 9795,
+        },
+        {
+          PRODUCT_ID: 190,
+          PRODUCT_NAME: "75GB 9MOBILE GIFTING = ₦15,150 1 Month",
+          planAmount: 15145,
+          PRODUCT_AMOUNT: 15145,
+        },
       ]
     }
   ];

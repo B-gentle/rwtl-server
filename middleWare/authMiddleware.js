@@ -1,83 +1,91 @@
 const asyncHandler = require("express-async-handler");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const Admin = require("../models/adminModel.js");
 const User = require("../models/userModel.js");
 
 const protect = asyncHandler(async (req, res, next) => {
-    try {
-        const token = req.cookies.token;
-        if (!token) {
-            res.status(401)
-            throw new Error("Not Authorized, please login")
-        }
-
-        // verify the token
-        const decryptedToken = jwt.verify(token, process.env.jwtSecret)
-        // get user id from token
-        const user = await User.findById(decryptedToken.id).select("-password")
-            .populate('downlines.package.ID', 'name')
-        if (!user) {
-            res.status(401)
-            throw new Error("user not found")
-        }
-
-        req.user = user
-        next();
-    } catch (error) {
-        res.status(401)
-        throw new Error("Not Authorized, please login")
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      res.status(401);
+      throw new Error("Not Authorized, please login");
     }
+
+    // verify the token
+    const decryptedToken = jwt.verify(token, process.env.jwtSecret);
+    // get user id from token
+    const user = await User.findById(decryptedToken.id)
+      .select("-password")
+      .populate("downlines.package.ID", "name");
+    if (!user) {
+      res.status(401);
+      throw new Error("user not found");
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401);
+    throw new Error("Not Authorized, please login");
+  }
 });
 
 const adminProtect = asyncHandler(async (req, res, next) => {
-    try {
-        const token = req.cookies.token;
-        if (!token) {
-            res.status(401)
-            throw new Error("Not Authorized, please login")
-        }
-
-        // verify the token
-        const decryptedToken = jwt.verify(token, process.env.jwtSecret)
-        // get user id from token
-        const admin = await Admin.findById(decryptedToken.id).select("-password")
-        if (!admin) {
-            res.status(401)
-            throw new Error("admin not found")
-        }
-
-        req.admin = admin
-        next();
-    } catch (error) {
-        res.status(401)
-        throw new Error("Not Authorized, please login")
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      res.status(401);
+      throw new Error("Not Authorized, please login");
     }
+
+    // verify the token
+    const decryptedToken = jwt.verify(token, process.env.jwtSecret);
+    // get user id from token
+    const admin = await Admin.findById(decryptedToken.id).select("-password");
+    if (!admin) {
+      res.status(401);
+      throw new Error("admin not found");
+    }
+
+    req.admin = admin;
+    next();
+  } catch (error) {
+    res.status(401);
+    throw new Error("Not Authorized, please login");
+  }
 });
 
-const adminRoleProtect = asyncHandler(async (req, res, next) => {
+const adminRoleProtect = (roles) => {
+  return asyncHandler(async (req, res, next) => {
     try {
-        const token = req.cookies.token;
-        if (!token) {
-            res.status(401)
-            throw new Error("Not Authorized, please login")
-        }
+      const token = req.cookies.token;
+      if (!token) {
+        res.status(401);
+        throw new Error("Not Authorized, please login");
+      }
 
-        // verify the token
-        const decryptedToken = jwt.verify(token, process.env.jwtSecret)
-        // get user id from token
-        const admin = await Admin.findById(decryptedToken.id).select("-password")
-        if (!admin) {
-            res.status(401)
-            throw new Error("admin not found")
-        }
+      // verify the token
+      const decryptedToken = jwt.verify(token, process.env.jwtSecret);
+      // get user id from token
+      const admin = await Admin.findById(decryptedToken.id).select("-password");
+      if (!admin) {
+        res.status(401);
+        throw new Error("admin not found");
+      }
 
-        req.admin = admin
-        next();
+      const hasPriviledges = admin.role;
+      if (!roles.includes(hasPriviledges)) {
+        res.status(401);
+        throw new Error("You do not have permission to access this page");
+      }
+
+      req.admin = admin;
+      next();
     } catch (error) {
-        res.status(401)
-        throw new Error("Not Authorized, please login")
+      res.status(401);
+      throw new Error(error.message);
     }
-});
+  });
+};
 
-
-module.exports = {protect, adminProtect};
+module.exports = { protect, adminProtect, adminRoleProtect };

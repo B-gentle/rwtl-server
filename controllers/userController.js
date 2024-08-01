@@ -1059,6 +1059,11 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
     }
 })
 
+const getTotalUsers = asyncHandler(async (req, res) => {
+    const totalUsers = await User.countDocuments({})
+    res.status(200).json(totalUsers)
+})
+
 module.exports = {
     getUserFullName,
     registerUser,
@@ -1078,5 +1083,6 @@ module.exports = {
     getNotification,
     generateStaticAccount,
     createTransactionPin,
-    changePin
+    changePin,
+    getTotalUsers
 }
