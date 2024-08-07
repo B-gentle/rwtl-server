@@ -323,7 +323,8 @@ const viewUserDetails = asyncHandler(async (req, res) => {
 });
 
 const viewUserTransactions = asyncHandler(async (req, res) => {
-  const { option, username, transactionType, from, to, period, page } = req.body;
+  const { option, username, transactionType, from, to, period, page } =
+    req.body;
 
   try {
     let query = {};
@@ -380,7 +381,7 @@ const viewUserTransactions = asyncHandler(async (req, res) => {
       res.status(200).json({
         data: transactions,
         pageNumber,
-        pages: totalTransactions
+        pages: totalTransactions,
         //  Math.ceil(totalTransactions / pageSize),
       });
     } else {
@@ -678,6 +679,49 @@ const getTotalAdmin = asyncHandler(async (req, res) => {
   res.status(200).json(totalAdmin);
 });
 
+const viewAdmins = asyncHandler(async (req, res) => {
+  const admins = await Admin.find({}, "-password");
+  if (!admins) {
+    res.status(500);
+    throw new Error("Something went wrong, please try again");
+  }
+  res.status(200).json(admins);
+});
+
+const viewSingleAdmin = asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.params.id).select("-password");
+  if (!admin) {
+    res.status(404);
+    throw new Error("Admin not found");
+  }
+  res.status(200).json(admin);
+});
+
+const editAdmin = asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.body._id);
+
+  if (admin) {
+    admin.fullname = req.body.fullname || admin.fullname;
+
+    const updatedAdmin = await admin.save();
+    res.status(200).json(updatedAdmin);
+  } else {
+    res.status(404);
+    throw new Error("Admin not found");
+  }
+});
+
+const deleteAdmin = asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.params.id);
+  if (admin) {
+    await Admin.deleteOne({ _id: admin._id });
+    res.status(200).json({ message: "Admin Deleted" });
+  } else {
+    res.status(404);
+    throw new Error("Admin not Found");
+  }
+});
+
 module.exports = {
   addadmin,
   completeUserRegistration,
@@ -698,4 +742,8 @@ module.exports = {
   editUsername,
   changePassword,
   getTotalAdmin,
+  viewAdmins,
+  viewSingleAdmin,
+  editAdmin,
+  deleteAdmin,
 };
