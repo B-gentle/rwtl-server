@@ -3,6 +3,7 @@ const Admin = require("../models/adminModel");
 const CurrentDate = require("../models/dateModel");
 const Package = require("../models/packageModel");
 const JoenatechDataPlan = require("../models/joenatechMTNDataModel");
+const JoenatechCablePlan = require("../models/geoDnaCableTvModel")
 const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
 
@@ -654,6 +655,261 @@ const insertDataPlans = async (req, res) => {
     }
   ];
 
+  const cablePlans = [
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 2,
+     "cableplanName": "GOtv Max",
+     "cableplanAmount": 7200
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 6,
+     "cableplanName": "DStv Yanga",
+     "cableplanAmount": 5100
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 7,
+     "cableplanName": "DStv Compact",
+     "cableplanAmount": 15700
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 8,
+     "cableplanName": "DStv Compact Plus",
+     "cableplanAmount": 25000
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 9,
+     "cableplanName": "DStv Premium",
+     "cableplanAmount": 37000
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 11,
+     "cableplanName": "Classic - 5000 Naira - 1 Month",
+     "cableplanAmount": 5000
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 12,
+     "cableplanName": "Basic - 3300 Naira - 1 Month",
+     "cableplanAmount": 3300
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 13,
+     "cableplanName": "Smart - 4200 Naira - 1 Month",
+     "cableplanAmount": 4200
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 15,
+     "cableplanName": "Super - 8200 Naira - 1 Month",
+     "cableplanAmount": 8200
+    },
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 16,
+     "cableplanName": "GOtv Jinja",
+     "cableplanAmount": 3300
+    },
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 17,
+     "cableplanName": "GOtv Jolli",
+     "cableplanAmount": 4850
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 19,
+     "cableplanName": "DStv Confam",
+     "cableplanAmount": 9300
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 20,
+     "cableplanName": "DStv Padi",
+     "cableplanAmount": 3600
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 23,
+     "cableplanName": "DStv Asia",
+     "cableplanAmount": 12400
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 24,
+     "cableplanName": "DStv Premium French",
+     "cableplanAmount": 57500
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 25,
+     "cableplanName": "DStv Premium Asia",
+     "cableplanAmount": 42000
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 26,
+     "cableplanName": "DStv Confam + ExtraView",
+     "cableplanAmount": 14300
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 27,
+     "cableplanName": "DStv Yanga + ExtraView",
+     "cableplanAmount": 10100
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 28,
+     "cableplanName": "DStv Padi + ExtraView",
+     "cableplanAmount": 8600
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 29,
+     "cableplanName": "DStv Compact + Extra View",
+     "cableplanAmount": 20700
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 30,
+     "cableplanName": "DStv Premium + Extra View",
+     "cableplanAmount": 42000
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 31,
+     "cableplanName": "DStv Compact Plus +Extra View",
+     "cableplanAmount": 30000
+    },
+    {
+     "cableID": 2,
+     "cableName": "DSTV",
+     "cableplanID": 32,
+     "cableplanName": "DStv HDPVR Access Service",
+     "cableplanAmount": 5000
+    },
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 34,
+     "cableplanName": "GOtv Smallie - Monthly",
+     "cableplanAmount": 1575
+    },
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 35,
+     "cableplanName": "GOtv Smallie - Quarterly",
+     "cableplanAmount": 4175
+    },
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 36,
+     "cableplanName": "GOtv Smallie - Yearly",
+     "cableplanAmount": 12300
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 37,
+     "cableplanName": "Nova - 600 Naira - 1 Week",
+     "cableplanAmount": 600
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 38,
+     "cableplanName": "Basic - 1100 Naira - 1 Week",
+     "cableplanAmount": 1100
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 39,
+     "cableplanName": "Smart - 1400 Naira - 1 Week",
+     "cableplanAmount": 1400
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 40,
+     "cableplanName": "Classic - 1700 Naira - 1 Week",
+     "cableplanAmount": 1700
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 41,
+     "cableplanName": "Super - 2800 Naira - 1 Week",
+     "cableplanAmount": 2800
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 42,
+     "cableplanName": "Nova - 500 Naira - 1 Day",
+     "cableplanAmount": 500
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 43,
+     "cableplanName": "Basic - 1000 Naira - 1 Day",
+     "cableplanAmount": 1000
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 44,
+     "cableplanName": "Smart - 1000 Naira - 1 Day",
+     "cableplanAmount": 1000
+    },
+    {
+     "cableID": 3,
+     "cableName": "STARTIME",
+     "cableplanID": 45,
+     "cableplanName": "Classic - 1000 Naira - 1 Day",
+     "cableplanAmount": 1000
+    },
+    {
+     "cableID": 1,
+     "cableName": "GOTV",
+     "cableplanID": 47,
+     "cableplanName": "Gotv-supa monthly",
+     "cableplanAmount": 9600
+    }
+   ]
+
   // Added 8% to all prices
   // dataPlans.map(dataPlan => {
   //   dataPlan.plans.map(plan => {
@@ -666,7 +922,7 @@ const insertDataPlans = async (req, res) => {
     await JoenatechDataPlan.insertMany(dataPlans);
     // await CurrentDate.create({Day: 2, Month: 6, Year: currentYear});
     res.status(200).json({
-      message: "Data Plans Inserted",
+      message: "Cable Plans Inserted",
     });
   } catch (error) {
     console.log(error);

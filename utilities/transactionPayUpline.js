@@ -2,11 +2,11 @@ const Package = require("../models/packageModel");
 const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
 
-const payUplines = async (currentUserUplineId, amount, transactionId, network, phoneNumber) => {
+const payUplines = async (currentUserUplineId, amount, transactionId, network, phoneNumber, earningLevel) => {
     try {
 
         let uplineID = currentUserUplineId;
-        let earningLimit = 5;
+        let earningLimit = earningLevel;
 
         for (let i = 1; i <= earningLimit; i++) {
             let generation = i
@@ -50,11 +50,11 @@ const payUplines = async (currentUserUplineId, amount, transactionId, network, p
     }
 }
 
-const payUtilityUplines = async ( currentUserUplineId, amount, transactionId, number, company, cat) => {
+const payUtilityUplines = async ( currentUserUplineId, amount, transactionId, number, company, earningLevel, cat) => {
     try {
 
         let uplineID = currentUserUplineId;
-        let earningLimit = 5;
+        let earningLimit = earningLevel;
 
         for (let i = 1; i <= earningLimit; i++) {
             let generation = i

@@ -1,5 +1,6 @@
 const DataPlan = require("../models/dataPlansModel");
 const JoenatechDataPlan = require("../models/joenatechMTNDataModel");
+const JoenatechCablePlan = require("../models/geoDnaCableTvModel");
 const asyncHandler = require("express-async-handler");
 const axios = require('axios')
 
@@ -39,6 +40,14 @@ const getCablePlans = asyncHandler(async (req, res) => {
 
 })
 
+const getDnaCablePlans = asyncHandler(async (req, res) => {
+    const {
+        cableNetwork
+    } = req.query;
+    const response = await JoenatechCablePlan.find({cableID: cableNetwork});
+    res.status(200).json(response)
+})
+
 const getJoeNadPlan = asyncHandler(async (req, res) => {
     const {networkCode} = req.body
     const plans = await JoenatechDataPlan.find({
@@ -56,5 +65,6 @@ const getJoeNadPlan = asyncHandler(async (req, res) => {
 module.exports = {
     getDataPlan,
     getCablePlans,
+    getDnaCablePlans,
     getJoeNadPlan
 }

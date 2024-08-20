@@ -9,6 +9,7 @@ const {
   payUplines,
   payUtilityUplines,
 } = require("../utilities/transactionPayUpline");
+const JoenatechCablePlan = require("../models/geoDnaCableTvModel");
 
 const currentDate = new Date();
 const currentYear = currentDate.getFullYear();
@@ -275,122 +276,129 @@ const transferCommission = asyncHandler(async (req, res) => {
   }
 });
 
-const purchaseAirtime = async (req, res) => {
+const purchaseAirtime = asyncHandler(async (req, res) => {
   const { network, phoneNumber, amount } = req.body;
 
+  // Check if required data is provided
+  if (!network || !phoneNumber || !amount) {
+    return res.status(400).json({
+      message: "Please provide all the required fields",
+    });
+  }
+
+  // Define the discount rates for each mobile network
+  const discountRates = {
+    1: 2, // MTN @ 2%
+    2: 4, // Glo @ 4%
+    4: 2, // Airtel @ 2%
+    3: 2, // 9mobile @ 2%
+  };
+
+  // Check if the provided mobile network is valid
+  if (!discountRates.hasOwnProperty(network)) {
+    return res.status(400).json({
+      message: "Invalid mobile network code",
+    });
+  }
+
+  const currentUser = await User.findById(req.user.id).populate("package");
+
+  // Check if the user has sufficient balance in their wallet
+  if (currentUser.walletBalance < amount) {
+    return res.status(400).json({
+      message: "Insufficient wallet balance",
+    });
+  }
+
+  // Calculate the bonus amount based on the discount rate
+  const discountRate = discountRates[network];
+  const userCommission = (amount * (discountRate / 100)).toFixed(2);
+  const transactionId =
+    req.user.username +
+    `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+
+  // Make the API call to purchase airtime
   try {
-    // Check if required data is provided
-    if (!network || !phoneNumber) {
-      return res.status(400).json({
-        message: "Please provide all the required fields",
-      });
-    }
-
-    // Define the discount rates for each mobile network
-    const discountRates = {
-      "01": 2, // MTN @ 3.5%
-      "02": 4, // Glo @ 8%
-      "04": 2, // Airtel @ 3.5%
-      "03": 4, // 9mobile @ 6.5%
-    };
-
-    // Check if the provided mobile network is valid
-    if (!discountRates.hasOwnProperty(network)) {
-      return res.status(400).json({
-        message: "Invalid mobile network code",
-      });
-    }
-
-    const currentUser = await User.findById(req.user.id).populate("package");
-
-    // Check if the user has sufficient balance in their wallet
-    if (currentUser.walletBalance < amount) {
-      return res.status(400).json({
-        message: "Insufficient wallet balance",
-      });
-    }
-
-    // Calculate the bonus amount based on the discount rate
-    const discountRate = discountRates[network];
-    const userCommission = (amount * (discountRate / 100)).toFixed(2);
-    const transactionId =
-      req.user.username +
-      `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
-
-    // Make the API call to purchase airtime
-    try {
-      const response = await axios.get(
-        "https://www.nellobytesystems.com/APIAirtimeV1.asp",
-        {
-          params: {
-            UserID: process.env.CLUB_KONNECT_USER_ID,
-            APIKey: process.env.CLUB_KONNECT_API_KEY,
-            MobileNetwork: network,
-            Amount: amount,
-            MobileNumber: phoneNumber,
-            RequestID: transactionId,
-            CallBackURL: "https;//localhost:5000/",
-          },
-        }
-      );
-
-      // Check if the airtime purchase was successful
-      if (response.data.statuscode === "100") {
-        // Deduct the purchase amount from the user's wallet balance
-        currentUser.walletBalance -= Number(amount);
-        // Add the bonus amount to the user's balance
-        currentUser.commissionBalance += parseFloat(userCommission);
-        currentUser.withdrawableCommission += parseFloat(userCommission);
-        await currentUser.save();
-
-        // Create a new transaction object
-        const transaction = new Transaction({
-          transactionId,
-          transactionType: "airtime",
-          status: "successful",
-          commission: parseFloat(userCommission),
-          network,
-          phoneNumber,
-          prevWalletBalance: currentUser.walletBalance + Number(amount),
-          newWalletBalance: currentUser.walletBalance,
-          prevCommissionBalance:
-            currentUser.withdrawableCommission - parseFloat(userCommission),
-          newCommissionBalance: currentUser.withdrawableCommission,
-          amount,
-          user: req.user._id,
-        });
-
-        // Save the transaction object
-        await transaction.save();
-
-        // Calculate and pay uplines based on package levels and percentages
-        payUplines(
-          currentUser.upline.ID,
-          amount,
-          transactionId,
-          network,
-          phoneNumber
-        );
-
-        return res.status(200).json({
-          message: "Airtime purchase successful",
-          userCommission,
-        });
-      } else {
-        // Return error response if the airtime purchase failed
-        return res.status(400).json({
-          message: response.data.status,
-        });
+    const response = await axios.post(
+      `${process.env.GEODNA}/topup/`,
+      {
+        network,
+        amount,
+        mobile_number: phoneNumber,
+        Ported_number: true,
+        airtime_type: "VTU",
+      },
+      {
+        headers: {
+          Authorization: process.env.GEODNA_TOKEN,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (error) {
-      res.status(500);
-      throw new Error(error.message);
+    );
+    // // Check if the airtime purchase was successful
+    if (response.data.Status === "successful") {
+      // Deduct the purchase amount from the user's wallet balance
+      currentUser.walletBalance -= Number(amount);
+      // Add the bonus amount to the user's balance
+      currentUser.commissionBalance += parseFloat(userCommission);
+      currentUser.withdrawableCommission += parseFloat(userCommission);
+      await currentUser.save();
+
+      // Create a new transaction object
+      const transaction = new Transaction({
+        transactionId,
+        transactionType: "airtime",
+        status: "successful",
+        commission: parseFloat(userCommission),
+        network,
+        phoneNumber,
+        prevWalletBalance: currentUser.walletBalance + Number(amount),
+        newWalletBalance: currentUser.walletBalance,
+        prevCommissionBalance:
+          currentUser.withdrawableCommission - parseFloat(userCommission),
+        newCommissionBalance: currentUser.withdrawableCommission,
+        amount,
+        user: req.user._id,
+      });
+
+      // Save the transaction object
+      await transaction.save();
+
+      // Calculate and pay uplines based on package levels and percentages
+      payUplines(
+        currentUser.upline.ID,
+        amount,
+        transactionId,
+        network,
+        phoneNumber,
+        2
+      );
+      return res.status(200).json({
+        message: `Purchase of N${amount} airtime to ${phoneNumber} from RWT was succesful`,
+        userCommission,
+      });
+    } else {
+      // Return error response if the airtime purchase failed
+      return res.status(400).json({
+        message: response.data.status,
+      });
     }
   } catch (error) {
+    let message =
+      error.response &&
+      error.response.data &&
+      error.response.data &&
+      error.response.data.error;
+    if (
+      message.toString().includes("You can't topup due to insufficient balance")
+    ) {
+      message = "Purchase Failure, contact Admin for help!";
+    }
+
     res.status(500);
-    throw new Error(error.message);
+    throw new Error(message.toString());
   }
-};
+});
 
 const purchaseData = async (req, res) => {
   const { network, phoneNumber, amount, networkPlan } = req.body;
@@ -411,325 +419,262 @@ const purchaseData = async (req, res) => {
       message: "Insufficient wallet balance",
     });
   }
-
-  if (network === "1" || network === "2" || network === "3" || network === "4") {
-    const selectedNetwork = await JoenatechDataPlan.find({
-      networkId: network,
-    });
-    const selectedPlan = selectedNetwork[0].plans.find(
-      (plan) => plan.PRODUCT_AMOUNT === Number(amount - 5)
-    );
-    const profit = Number(amount) - Number(selectedPlan.planAmount);
-    const userCommission = 0.02 * amount;
-    try {
-      const response = await axios.post(
-        "https://geodnatechsub.com/api/data/",
-        {
-          network: network,
-          mobile_number: phoneNumber,
-          plan: networkPlan,
-          Ported_number: true,
-        },
-        {
-          headers: {
-            Authorization: "Token 3e3a1f01d011d2f56d9ecd364ce4e002c1f2a0a6",
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      // check if the call was successful
-      if (response.data.Status === "successful") {
-        //  Deduct the purchase amount from the user's wallet balance
-        currentUser.walletBalance -= Number(amount);
-        // Add the bonus amount to the user's balance
-        currentUser.commissionBalance += parseFloat(userCommission);
-        currentUser.withdrawableCommission += parseFloat(userCommission);
-        await currentUser.save();
-
-        // create new transaction object
-        const transaction = new Transaction({
-          transactionId,
-          transactionType: "data",
-          status: "successful",
-          commission: parseFloat(userCommission),
-          network,
-          phoneNumber,
-          prevWalletBalance: currentUser.walletBalance + Number(amount),
-          newWalletBalance: currentUser.walletBalance,
-          prevCommissionBalance:
-            currentUser.withdrawableCommission - parseFloat(userCommission),
-          newCommissionBalance: currentUser.withdrawableCommission,
-          amount,
-          user: req.user._id,
-        });
-
-        // Save the transaction object
-        await transaction.save();
-
-        // Calculate and pay uplines based on package levels and percentages
-        payUplines(
-          currentUser.upline.ID,
-          amount,
-          transactionId,
-          network,
-          phoneNumber
-        );
-        res.status(200).json({
-          message: response.data.api_response,
-        });
-      } else {
-        res.status(400).json({
-          message: "Purchase not succesful, please try again",
-        });
-      }
-    } catch (error) {
-      const message =
-        error &&
-        error.response &&
-        error.response.data &&
-        error.response.data.error.toString();
-      res.status(404).json({
-        message: message,
-      });
-    }
-  } else {
-    try {
-      const discountRates = {
-        "01": 2, // MTN @ 3.5%
-        "02": 4, // Glo @ 8%
-        "04": 2, // Airtel @ 3.5%
-        "03": 4, // 9mobile @ 6.5%
-      };
-
-      //     // Check if the provided mobile network is valid
-      if (!discountRates.hasOwnProperty(network)) {
-        return res.status(400).json({
-          message: "Invalid mobile network code",
-        });
-      }
-
-      // Calculate the bonus amount based on the discount rate
-      const discountRate = discountRates[network];
-      const userCommission = (amount * (discountRate / 100)).toFixed(2);
-
-      const response = await axios.get(
-        "https://www.nellobytesystems.com/APIDatabundleV1.asp",
-        {
-          params: {
-            UserID: process.env.CLUB_KONNECT_USER_ID,
-            APIKey: process.env.CLUB_KONNECT_API_KEY,
-            MobileNetwork: network,
-            DataPlan: networkPlan,
-            MobileNumber: phoneNumber,
-            RequestID: transactionId,
-            CallBackURL: "https://localhost:5000/",
-          },
-        }
-      );
-
-      //         // Check if the data purchase was successful
-      if (response.data.statuscode === "100") {
-        // Deduct the purchase amount from the user's wallet balance
-        currentUser.walletBalance -= Number(amount);
-        // Add the bonus amount to the user's balance
-        currentUser.commissionBalance += parseFloat(userCommission);
-        currentUser.withdrawableCommission += parseFloat(userCommission);
-        await currentUser.save();
-
-        //  Create a new transaction object
-        const transaction = new Transaction({
-          transactionId,
-          transactionType: "data",
-          status: "successful",
-          commission: parseFloat(userCommission),
-          network,
-          phoneNumber,
-          prevWalletBalance: currentUser.walletBalance + Number(amount),
-          newWalletBalance: currentUser.walletBalance,
-          prevCommissionBalance:
-            currentUser.withdrawableCommission - parseFloat(userCommission),
-          newCommissionBalance: currentUser.withdrawableCommission,
-          amount,
-          user: req.user._id,
-        });
-
-        // Save the transaction object
-        await transaction.save();
-
-        //  Calculate and pay uplines based on package levels and percentages
-        payUplines(
-          currentUser.upline.ID,
-          amount,
-          transactionId,
-          network,
-          phoneNumber
-        );
-
-        return res.status(200).json({
-          message: "Data purchase successful",
-          userCommission,
-        });
-      } else {
-        // Return error response if the data purchase failed
-        //database transaction - learn it.
-        return res.status(400).json({
-          message: response.data.status,
-        });
-      }
-    } catch (error) {
-      return res.status(500).json({
-        message: "Internal server error",
-      });
-    }
-  }
-};
-
-const cableBills = async (req, res) => {
-  const { cableNetwork, number, amount, package } = req.body;
-
+  const selectedNetwork = await JoenatechDataPlan.find({
+    networkId: network,
+  });
+  const selectedPlan = selectedNetwork[0].plans.find(
+    (plan) => plan.PRODUCT_AMOUNT === Number(amount - 5)
+  );
+  const profit = Number(amount) - Number(selectedPlan.planAmount);
+  const userCommission = 0.02 * amount;
   try {
-    // Check if required data is provided
-    if (!cableNetwork || !number || !package) {
-      return res.status(400).json({
-        message: "Please provide all the required fields",
-      });
-    }
-
-    // Define the profit for each cable provider
-    // const profit = Number(amount) * (0.80 / 100)
-    const charges = 100;
-    const totalDebit = charges + Number(amount);
-
-    const currentUser = await User.findById(req.user.id).populate("package");
-
-    // Check if the user has sufficient balance in their wallet
-    if (currentUser.walletBalance < totalDebit) {
-      return res.status(400).json({
-        message: "Insufficient wallet balance",
-      });
-    }
-
-    // Calculate the bonus amount based on the profit
-    const userCommission = 20;
-    const transactionId =
-      req.user.username +
-      `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
-
-    // Make the API call to purchase data
-    try {
-      const response = await axios.get(
-        "https://www.nellobytesystems.com/APICableTVV1.asp",
-        {
-          params: {
-            UserID: process.env.CLUB_KONNECT_USER_ID,
-            APIKey: process.env.CLUB_KONNECT_API_KEY,
-            CableTV: cableNetwork,
-            Package: package,
-            SmartCardNo: number,
-            PhoneNo: currentUser.phoneNo,
-            RequestID: transactionId,
-            CallBackURL: "https://localhost:5000/",
-          },
-        }
-      );
-      // Check if the data purchase was successful
-      if (response.data.status === "ORDER_RECEIVED") {
-        // Deduct the purchase amount from the user's wallet balance
-        currentUser.walletBalance -= totalDebit;
-        // Add the bonus amount to the user's balance
-        currentUser.commissionBalance += userCommission;
-        currentUser.withdrawableCommission += userCommission;
-        await currentUser.save();
-
-        // Create a new transaction object
-        const transaction = new Transaction({
-          transactionId,
-          transactionType: "cableTv",
-          status: "successful",
-          commission: userCommission,
-          cableCompany: cableNetwork,
-          IUC: number,
-          prevWalletBalance: currentUser.walletBalance + totalDebit,
-          newWalletBalance: currentUser.walletBalance,
-          prevCommissionBalance:
-            currentUser.withdrawableCommission - userCommission,
-          newCommissionBalance: currentUser.withdrawableCommission,
-          amount,
-          user: req.user._id,
-        });
-
-        // Save the transaction object
-        await transaction.save();
-
-        //database transaction - learn it.
-
-        // Calculate and pay uplines based on package levels and percentages
-        payUtilityUplines(
-          currentUser.upline.ID,
-          amount,
-          transactionId,
-          number,
-          cableNetwork,
-          "cable"
-        );
-
-        return res.status(200).json({
-          message: "Cable Bill Paid",
-          userCommission,
-        });
-      } else {
-        // Return error response if the data purchase failed
-        return res.status(400).json({
-          message: response.data.status,
-        });
+    const response = await axios.post(
+      `${process.env.GEODNA}/data/`,
+      {
+        network: network,
+        mobile_number: phoneNumber,
+        plan: networkPlan,
+        Ported_number: true,
+      },
+      {
+        headers: {
+          Authorization: process.env.GEODNA_TOKEN,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        message: "Internal server error",
+    );
+    // check if the call was successful
+    if (response.data.Status === "successful") {
+      //  Deduct the purchase amount from the user's wallet balance
+      currentUser.walletBalance -= Number(amount);
+      // Add the bonus amount to the user's balance
+      currentUser.commissionBalance += parseFloat(userCommission);
+      currentUser.withdrawableCommission += parseFloat(userCommission);
+      await currentUser.save();
+
+      // create new transaction object
+      const transaction = new Transaction({
+        transactionId,
+        transactionType: "data",
+        status: "successful",
+        commission: parseFloat(userCommission),
+        network,
+        phoneNumber,
+        prevWalletBalance: currentUser.walletBalance + Number(amount),
+        newWalletBalance: currentUser.walletBalance,
+        prevCommissionBalance:
+          currentUser.withdrawableCommission - parseFloat(userCommission),
+        newCommissionBalance: currentUser.withdrawableCommission,
+        amount,
+        user: req.user._id,
+      });
+
+      // Save the transaction object
+      await transaction.save();
+
+      // Calculate and pay uplines based on package levels and percentages
+      payUplines(
+        currentUser.upline.ID,
+        amount,
+        transactionId,
+        network,
+        phoneNumber,
+        5
+      );
+      res.status(200).json({
+        message: response.data.api_response,
+      });
+    } else {
+      res.status(400).json({
+        message: "Purchase not succesful, please try again",
       });
     }
   } catch (error) {
-    res.status(500);
-    throw new Error(error.message);
+    const message =
+      error &&
+      error.response &&
+      error.response.data &&
+      error.response.data.error.toString();
+    res.status(404).json({
+      message: "Purchase Failed! please try again",
+    });
   }
 };
 
-const getCableOwner = asyncHandler(async (req, res) => {
-  const { cableNetwork, iuc } = req.body;
+const cableBills = asyncHandler(async (req, res) => {
+  const { cableNetwork, number, amount, package } = req.body;
 
+  const selectedPlan = await JoenatechCablePlan.find({ cableplanID: package });
+  if (amount !== selectedPlan[0].cableplanAmount) {
+    res.status(400);
+    throw new Error("Fraudulent Transaction, kindly input accurate amount");
+  }
+  // Check if required data is provided
+  if (!cableNetwork || !number || !package) {
+    res.status(400);
+    throw new Error("Please provide all the required fields");
+  }
+
+  // Define the profit for each cable provider
+  // const profit = Number(amount) * (0.80 / 100)
+  const charges = 100;
+  const totalDebit = charges + Number(amount);
+
+  const currentUser = await User.findById(req.user.id).populate("package");
+
+  // Check if the user has sufficient balance in their wallet
+  if (currentUser.walletBalance < totalDebit) {
+    return res.status(400).json({
+      message: "Insufficient wallet balance",
+    });
+  }
+
+  // Calculate the bonus amount based on the profit
+  const userCommission = 20;
+  const transactionId =
+    req.user.username +
+    `${currentYear}${currentMonth}${currentHour}${currentMinutes}`;
+
+  // Make the API call to purchase data
+  try {
+    const response = await axios.post(
+      `${process.env.GEODNA}/cablesub/`,
+      {
+        cablename: selectedPlan[0].cableID,
+        cableplan: package,
+        smart_card_number: number,
+      },
+      {
+        headers: {
+          Authorization: process.env.GEODNA_TOKEN,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    // Check if the data purchase was successful
+    if (response.data.Status === "successful") {
+      // Deduct the purchase amount from the user's wallet balance
+      currentUser.walletBalance -= totalDebit;
+      // Add the bonus amount to the user's balance
+      currentUser.commissionBalance += userCommission;
+      currentUser.withdrawableCommission += userCommission;
+      await currentUser.save();
+
+      // Create a new transaction object
+      const transaction = new Transaction({
+        transactionId,
+        transactionType: "cableTv",
+        status: "successful",
+        commission: userCommission,
+        cableCompany: cableNetwork,
+        IUC: number,
+        prevWalletBalance: currentUser.walletBalance + totalDebit,
+        newWalletBalance: currentUser.walletBalance,
+        prevCommissionBalance:
+          currentUser.withdrawableCommission - userCommission,
+        newCommissionBalance: currentUser.withdrawableCommission,
+        amount,
+        user: req.user._id,
+      });
+
+      // Save the transaction object
+      await transaction.save();
+
+      //database transaction - learn it.
+
+      // Calculate and pay uplines based on package levels and percentages
+      payUtilityUplines(
+        currentUser.upline.ID,
+        amount,
+        transactionId,
+        number,
+        cableNetwork,
+        2,
+        "cable"
+      );
+
+      return res.status(200).json({
+        message: "Cable Bill Paid",
+        userCommission,
+      });
+    } else {
+      // Return error response if the data purchase failed
+      return res.status(400).json({
+        message: response.data.status,
+      });
+    }
+  } catch (error) {
+    console.log(error.response.data);
+    let message = error.response.data.error || error.response.data.cableName;
+    if (
+      message.toString().includes("You can't topup due to insufficient balance")
+    ) {
+      message = "Subscribtion failed, please contact Admin!";
+    }
+    return res.status(500).json({
+      message,
+    });
+  }
+});
+
+const getCableOwner = asyncHandler(async (req, res) => {
+  const { cableNetwork, iuc } = req.query;
   if (!iuc) {
     res.status(404);
     throw new Error("No IUC Number entered");
   }
 
-  const response = await axios.get(
-    `${process.env.CLUB_KONNECT_URl}/APIVerifyCableTVV1.0.asp`,
-    {
-      params: {
-        UserID: process.env.CLUB_KONNECT_USER_ID,
-        APIKey: process.env.CLUB_KONNECT_API_KEY,
-        CableTV: cableNetwork,
-        SmartCardNo: iuc,
-        CallBackURL: "https://localhost:5000/",
-      },
-    }
-  );
-
-  if (response.data.status === "00") {
-    return res.status(200).json(response.data.customer_name);
+  const response = await axios.get(`${process.env.GEODNA}/validateiuc`, {
+    params: {
+      cablename: cableNetwork,
+      smart_card_number: iuc,
+    },
+    headers: {
+      Authorization: process.env.GEODNA_TOKEN,
+      "Content-Type": "application/json",
+    },
+  });
+  if (response.data.invalid === false) {
+    return res.status(200).json(response.data.name);
   } else {
     return res.status(400).json({
-      message: response.data.status,
+      message: response.data.name,
+    });
+  }
+});
+
+const verifyMeter = asyncHandler(async (req, res) => {
+  const { electricCompany, meternumber, metertype } = req.query;
+  if (!meternumber || !electricCompany || !metertype) {
+    res.status(404);
+    throw new Error("Please provide meternumber");
+  }
+  const response = await axios.get(`${process.env.GEODNA}/validatemeter`, {
+    params: {
+      meternumber,
+      disconame: electricCompany,
+      mtype: metertype,
+    },
+    headers: {
+      Authorization: process.env.GEODNA_TOKEN,
+      "Content-Type": "application/json",
+    },
+  }); 
+
+  if (response.data.invalid === false) {
+    return res.status(200).json(response.data.name);
+  } else {
+    return res.status(400).json({
+      message: response.data.name,
     });
   }
 });
 
 const electricityBills = async (req, res) => {
-  const { ElectricCompany, MeterType, amount, MeterNo } = req.body;
+  const { electricCompany, MeterType, amount, meterNo } = req.body;
 
   // Check if required data is provided
-  if (!ElectricCompany || !MeterNo || !MeterType) {
+  if (!electricCompany || !meterNo || !MeterType) {
     return res.status(400).json({
       message: "Please provide all the required fields",
     });
@@ -758,24 +703,26 @@ const electricityBills = async (req, res) => {
 
   // Make the API call to purchase data
   try {
-    const response = await axios.get(
-      "https://www.nellobytesystems.com/APIElectricityV1.asp",
+    const response = await axios.post(
+      `${process.env.GEODNA}/billpayment`,
       {
-        params: {
-          UserID: process.env.CLUB_KONNECT_USER_ID,
-          APIKey: process.env.CLUB_KONNECT_API_KEY,
-          ElectricCompany,
-          MeterType,
-          MeterNo,
-          PhoneNo: currentUser.phoneNo,
-          RequestID: transactionId,
-          CallBackURL: "https://localhost:5000/",
+        disco_name: electricCompany,
+        amount,
+        meter_number: meterNo,
+        MeterType,
+      },
+      {
+        headers: {
+          Authorization: process.env.GEODNA_TOKEN,
+          "Content-Type": "application/json",
         },
       }
     );
-
+    console.log(response)
+    console.log(response.data)
+    console.log(response.data.results)
     // Check if the data purchase was successful
-    if (response.data.statuscode === "ORDER_RECEIVED") {
+    if (response.data.Status === "successful") {
       // Deduct the purchase amount from the user's wallet balance
       currentUser.walletBalance -= totalDebit;
       // Add the bonus amount to the user's balance
@@ -789,8 +736,8 @@ const electricityBills = async (req, res) => {
         transactionType: "electricity",
         status: "successful",
         commission: userCommission,
-        electricCompany: ElectricCompany,
-        meterNo: MeterNo,
+        electricCompany: electricCompany,
+        meterNo: meterNo,
         prevWalletBalance: currentUser.walletBalance + totalDebit,
         newWalletBalance: currentUser.walletBalance,
         prevCommissionBalance:
@@ -810,8 +757,8 @@ const electricityBills = async (req, res) => {
         currentUser.upline.ID,
         amount,
         transactionId,
-        number,
-        cableNetwork,
+        meterNo,
+        electricCompany,
         "electricity"
       );
 
@@ -820,15 +767,22 @@ const electricityBills = async (req, res) => {
         userCommission,
       });
     } else {
+      console.log(response)
       // Return error response if the data purchase failed
       return res.status(400).json({
         message: response.data.status,
       });
     }
   } catch (error) {
-    console.error(error);
+    console.log(error.response.data);
+    let message = error.response.data.error;
+    if (
+      message.toString().includes("You can't topup due to insufficient balance")
+    ) {
+      message = "Subscribtion failed, please contact Admin!";
+    }
     return res.status(500).json({
-      message: "Internal server error",
+      message,
     });
   }
 };
@@ -966,13 +920,11 @@ module.exports = {
   purchaseData,
   cableBills,
   getCableOwner,
+  verifyMeter,
   electricityBills,
   transferCommission,
   getExamType,
   buyWaecEpin,
 };
 
-
 //https://www.nellobytesystems.com/APIJAMBV1.asp?UserID=your_userid&APIKey=your_apikey&ExamType=exam_code&PhoneNo=recipient_phoneno&RequestID=request_id&CallBackURL=callback_url
-
- 
