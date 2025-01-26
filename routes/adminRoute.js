@@ -1,6 +1,6 @@
 const express = require("express");
 const { addadmin, creditUserWallet, completeUserRegistration, loginAdmin, logout, getLoggedInAdmin, loginStatus, getPendingRegisteredUsers, viewUserDetails, viewUserTransactions, editUserPersonalInformation, editUserBankDetails, changeUserPassword, accessUserAccount, notifyUsers, editUsername, viewQualifiedUsers, changePassword, getTotalAdmin, viewAdmins, deleteAdmin, viewSingleAdmin, editAdmin } = require("../controllers/adminController");
-const { getTransactions } = require("../controllers/transactionController");
+const { getTransactions, deleteTransactions } = require("../controllers/transactionController");
 const { resetPassword, forgotPassword, getUserFullName } = require("../controllers/userController");
 const {adminProtect, adminRoleProtect, protect} = require("../middleWare/authMiddleware");
 const router = express.Router();
@@ -31,6 +31,7 @@ router.post("/notifyusers", adminProtect, notifyUsers)
 router.patch("/changepassword", adminProtect, changePassword)
 router.get("/get-total-admin", adminProtect, getTotalAdmin)
 router.get('/admin-list', adminProtect, viewAdmins)
+router.post('/clear-transactions', adminProtect, deleteTransactions)
 
 
 module.exports = router;

@@ -659,7 +659,7 @@ const verifyMeter = asyncHandler(async (req, res) => {
       Authorization: process.env.GEODNA_TOKEN,
       "Content-Type": "application/json",
     },
-  }); 
+  });
 
   if (response.data.invalid === false) {
     return res.status(200).json(response.data.name);
@@ -718,9 +718,9 @@ const electricityBills = async (req, res) => {
         },
       }
     );
-    console.log(response)
-    console.log(response.data)
-    console.log(response.data.results)
+    console.log(response);
+    console.log(response.data);
+    console.log(response.data.results);
     // Check if the data purchase was successful
     if (response.data.Status === "successful") {
       // Deduct the purchase amount from the user's wallet balance
@@ -767,7 +767,7 @@ const electricityBills = async (req, res) => {
         userCommission,
       });
     } else {
-      console.log(response)
+      console.log(response);
       // Return error response if the data purchase failed
       return res.status(400).json({
         message: response.data.status,
@@ -912,6 +912,29 @@ const buyWaecEpin = async (req, res) => {
   }
 };
 
+const deleteTransactions = async (req, res) => {
+  try {
+    const { date, transactionType } = req.body;
+
+    // Check if required data is provided
+    if (!date || !transactionType) {
+      return res.status(400).json({
+        message: "Please Enter All Fields",
+      });
+    }
+
+    const trans = await Transaction.deleteMany({
+      createdAt: { $lt: new Date(date) },
+      transactionType: transactionType,
+    });
+
+    res.status(200).json({message: 'Transactions Deleted successfully'});
+  } catch (error) {
+    res.status(500);
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   purchaseAirtime,
   sendMoney,
@@ -925,6 +948,7 @@ module.exports = {
   transferCommission,
   getExamType,
   buyWaecEpin,
+  deleteTransactions,
 };
 
 //https://www.nellobytesystems.com/APIJAMBV1.asp?UserID=your_userid&APIKey=your_apikey&ExamType=exam_code&PhoneNo=recipient_phoneno&RequestID=request_id&CallBackURL=callback_url
