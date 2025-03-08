@@ -60,7 +60,7 @@ const getJoeNadPlan = asyncHandler(async (req, res) => {
 
 const editDnaDataPrices = asyncHandler(async (req, res) => {
   const { networkId } = req.params;
-  const { PRODUCT_ID, planAmount, PRODUCT_AMOUNT } = req.body;
+  const { PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME } = req.body;
 
   const dataPlan = await JoenatechDataPlan.findOne({ networkId });
   if (!dataPlan) {
@@ -77,6 +77,7 @@ const editDnaDataPrices = asyncHandler(async (req, res) => {
 
   plan.planAmount = planAmount;
   plan.PRODUCT_AMOUNT = PRODUCT_AMOUNT;
+  plan.PRODUCT_NAME = PRODUCT_NAME;
   const updatedPlan = await dataPlan.save();
   if (updatedPlan) {
     res.status(200).json({ message: "Plan updated successfully" });
@@ -86,10 +87,33 @@ const editDnaDataPrices = asyncHandler(async (req, res) => {
   }
 });
 
+const addDnaDataPrices = asyncHandler(async (req, res) => {
+  const { networkId, PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME } = req.body;
+
+  const network = await JoenatechDataPlan.findOne({ networkId });
+  if (!network) {
+    res.status(404);
+    throw new Error("Network not found, please select a valid network!");
+  }
+
+  const newPlan = {networkId, PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME}
+
+  network.plans.push(newPlan)
+
+  const addedPlan = await network.save();
+  if (addedPlan) {
+    res.status(201).json({ message: "Plan added successfully" });
+  } else {
+    res.status(500);
+    throw new Error("Failed to add plan, please try again!");
+  }
+});
+
 module.exports = {
   getDataPlan,
   getCablePlans,
   getDnaCablePlans,
   getJoeNadPlan,
   editDnaDataPrices,
+  addDnaDataPrices
 };
