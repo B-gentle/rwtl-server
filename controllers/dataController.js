@@ -60,7 +60,7 @@ const getJoeNadPlan = asyncHandler(async (req, res) => {
 
 const editDnaDataPrices = asyncHandler(async (req, res) => {
   const { networkId } = req.params;
-  const { PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME } = req.body;
+  const { id, PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME } = req.body;
 
   const dataPlan = await JoenatechDataPlan.findOne({ networkId });
   if (!dataPlan) {
@@ -68,13 +68,14 @@ const editDnaDataPrices = asyncHandler(async (req, res) => {
     throw new Error("Data plan not found");
   }
 
-  const plan = dataPlan.plans.find((plan) => plan.PRODUCT_ID === PRODUCT_ID);
+  const plan = dataPlan.plans.find((plan) => plan._id.toString() === id);
 
   if (!plan) {
     res.status(404);
     throw new Error("Plan not found");
   }
 
+  plan.PRODUCT_ID = PRODUCT_ID || plan.PRODUCT_ID;
   plan.planAmount = planAmount;
   plan.PRODUCT_AMOUNT = PRODUCT_AMOUNT;
   plan.PRODUCT_NAME = PRODUCT_NAME;
