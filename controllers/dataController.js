@@ -89,7 +89,8 @@ const editDnaDataPrices = asyncHandler(async (req, res) => {
 });
 
 const addDnaDataPrices = asyncHandler(async (req, res) => {
-  const { networkId, PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME } = req.body;
+  const { networkId, PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME } =
+    req.body;
 
   const network = await JoenatechDataPlan.findOne({ networkId });
   if (!network) {
@@ -97,9 +98,15 @@ const addDnaDataPrices = asyncHandler(async (req, res) => {
     throw new Error("Network not found, please select a valid network!");
   }
 
-  const newPlan = {networkId, PRODUCT_ID, planAmount, PRODUCT_AMOUNT, PRODUCT_NAME}
+  const newPlan = {
+    networkId,
+    PRODUCT_ID,
+    planAmount,
+    PRODUCT_AMOUNT,
+    PRODUCT_NAME,
+  };
 
-  network.plans.push(newPlan)
+  network.plans.push(newPlan);
 
   const addedPlan = await network.save();
   if (addedPlan) {
@@ -110,11 +117,122 @@ const addDnaDataPrices = asyncHandler(async (req, res) => {
   }
 });
 
+const getJoeNadCablePlan = asyncHandler(async (req, res) => {
+  const { cableNetwork } = req.body;
+  const plans = await JoenatechCablePlan.find({
+    cableName: cableNetwork,
+  });
+  if (plans) {
+    res.status(200).json(plans);
+  } else {
+    res.status(400);
+    throw new Error("No data plan found");
+  }
+});
+
+const editDnaCablePrices = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { cableplanID, cableplanAmount, cableplanName, cableName } = req.body;
+
+  const plan = await JoenatechCablePlan.findById(id);
+  if (!plan) {
+    res.status(404);
+    throw new Error("Cable plan not found");
+  }
+
+  plan.cableplanID = cableplanID || plan.cableplanID;
+  plan.cableplanAmount = cableplanAmount || plan.cableplanAmount;
+  plan.cableplanName = cableplanName || plan.cableplanName;
+  plan.cableName = cableName || plan.cableName;
+  const updatedPlan = await plan.save();
+  if (updatedPlan) {
+    res.status(200).json({ message: "Plan updated successfully" });
+  } else {
+    res.status(500);
+    throw new Error("Internal Server Error");
+  }
+});
+
+const deleteDnaDataPlan = asyncHandler(async (req, res) => {
+  const { networkId, id } = req.body;
+
+  const dataPlan = await JoenatechDataPlan.findOneAndUpdate(
+    { networkId },
+    { $pull: { plans: { _id: id } } },
+    { new: true }
+  );
+  if (!dataPlan) {
+    res.status(404);
+    throw new Error("Data plan not found");
+  }
+
+  const planDeleted = dataPlan.plans.some(
+    (plan) => plan._id?.toString() === id
+  );
+  console.log(planDeleted);
+  if (!planDeleted) {
+    res.status(200).json({ message: "Plan deleted successfully" });
+  } else {
+    res.status(404);
+    throw new Error("Plan not found in the network.");
+  }
+});
+
+const deleteDnaCablePlan = asyncHandler(async (req, res) => {
+  const { id } = req.body;
+
+  const cablePlan = await JoenatechCablePlan.findById(id);
+
+  if (cablePlan) {
+    await cablePlan.deleteOne();
+    res.status(200).json({ message: "Plan deleted Successfully" });
+  } else {
+    res.status(404);
+    throw new Error("Cable plan not found");
+  }
+});
+
+const addDnaCablePlan = asyncHandler(async (req, res) => {
+  const { cableName, cableplanID, cableplanName, cableplanAmount, cableID } =
+    req.body;
+
+  if (
+    !cableName ||
+    !cableplanID ||
+    !cableplanName ||
+    !cableplanAmount ||
+    !cableID
+  ) {
+    res.status(400);
+    throw new Error("Please fill in all required fields");
+  }
+
+  const plan = await JoenatechCablePlan.create({
+    cableName,
+    cableplanID,
+    cableplanName,
+    cableplanAmount,
+    cableID,
+  });
+
+  if (plan) {
+    res.status(201).json({ message: "Plan added successfully" });
+  } else {
+    res.status(500);
+    throw new Error("Internal Server error, please try again!");
+  }
+});
+
 module.exports = {
   getDataPlan,
   getCablePlans,
   getDnaCablePlans,
   getJoeNadPlan,
   editDnaDataPrices,
-  addDnaDataPrices
+  addDnaDataPrices,
+  getJoeNadCablePlan,
+  editDnaCablePrices,
+  deleteDnaDataPlan,
+  deleteDnaCablePlan,
+  addDnaCablePlan,
 };
