@@ -1043,8 +1043,7 @@ const generateStaticAccount = asyncHandler(async (req, res) => {
     try {
         const response = await axios.post(url, data, {
             headers
-        });
-        console.log(response.data)
+        })
         if (response.data.requestSuccessful === true) {
             user.staticAccount = response.data.account_number
             user.staticAccountName = response.data.account_name
